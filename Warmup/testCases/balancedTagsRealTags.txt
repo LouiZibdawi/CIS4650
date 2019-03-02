@@ -1,0 +1,12 @@
+<DOC text=wowFont>
+< TEXT temp=wowow text  = WOWOW>
+<DATE align="left"  >
+< DOCNO >
+<HEADLINE >
+<  LENGTH  >
+</  LENGTH  >
+</ HEADLINE >
+</   DOCNO >
+</   DATE    >
+</TEXT  >
+</   DOC  >

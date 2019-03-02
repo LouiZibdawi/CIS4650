@@ -1,0 +1,13 @@
+dog
+cat
+cat-dog
+cat-dog-bird
+cat--dog-bird
+cat-cat-cat
+-cat-dog-bird
+cat-123
+-this-is-a-test-123
+-this-is-a-test--123
+-this-is-a-test--abc
+this-is-a-test-123
+

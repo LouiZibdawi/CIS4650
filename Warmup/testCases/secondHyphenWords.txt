@@ -1,0 +1,15 @@
+this-is-a-test
+cats-dogs
+cats--dogs
+cats---dogs
+what-if-this
+what-if-that-but-not-this
+what-if-that--but-not-this
+-this-should-not-work
+-this-should-also-not-work-
+this-should-also-also-not-work-
+this'should-be-an-apostrophe
+this-should-be-also-be-an'apostrophized
+this'should'be'also-be'an'apostrophized
+brexton-junion's
+brexton's toy'''s
