@@ -2,26 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="c85a3047-5d97-478e-b1ef-fe192fdb014e" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/absyn/FunctionDec.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ShowTreeVisitor.java" beforeDir="false" afterPath="$PROJECT_DIR$/ShowTreeVisitor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/Absyn.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/Absyn.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/AbsynVisitor.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/AbsynVisitor.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/ArrayDec.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/ArrayDec.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/CallExp.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/CallExp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/CompoundExp.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/CompoundExp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/FuctionDec.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/IndexVar.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/IndexVar.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/NameTy.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/NameTy.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/NilExp.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/NilExp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/OpExp.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/OpExp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/ReadExp.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/ReadExp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/RepeatExp.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/RepeatExp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/ReturnExp.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/ReturnExp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/SimpleDec.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/SimpleDec.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/SimpleVar.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/SimpleVar.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/WhileExp.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/WhileExp.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/absyn/WriteExp.java" beforeDir="false" afterPath="$PROJECT_DIR$/absyn/WriteExp.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -40,11 +21,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/ShowTreeVisitor.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="572">
-              <caret line="112" column="5" selection-start-line="112" selection-start-column="5" selection-end-line="112" selection-end-column="5" />
+            <state relative-caret-position="589">
+              <caret line="119" column="49" lean-forward="true" selection-start-line="119" selection-start-column="49" selection-end-line="119" selection-end-column="49" />
               <folding>
                 <element signature="e#152#153#0" expanded="true" />
                 <element signature="e#233#234#0" expanded="true" />
@@ -62,11 +43,11 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/absyn/IndexVar.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="187">
-              <caret line="11" column="4" selection-start-line="11" selection-start-column="4" selection-end-line="11" selection-end-column="4" />
+              <caret line="11" selection-start-line="11" selection-end-line="11" />
             </state>
           </provider>
         </entry>
@@ -204,10 +185,10 @@
         <option value="$PROJECT_DIR$/absyn/RepeatExp.java" />
         <option value="$PROJECT_DIR$/absyn/WriteExp.java" />
         <option value="$PROJECT_DIR$/absyn/AbsynVisitor.java" />
-        <option value="$PROJECT_DIR$/ShowTreeVisitor.java" />
         <option value="$PROJECT_DIR$/absyn/SimpleVar.java" />
         <option value="$PROJECT_DIR$/absyn/IndexVar.java" />
         <option value="$PROJECT_DIR$/absyn/NameTy.java" />
+        <option value="$PROJECT_DIR$/ShowTreeVisitor.java" />
       </list>
     </option>
   </component>
@@ -251,7 +232,7 @@
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1551636518348" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1551636781028" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
   </component>
@@ -281,7 +262,7 @@
       <workItem from="1551564137133" duration="417000" />
       <workItem from="1551582626419" duration="644000" />
       <workItem from="1551583311408" duration="11149000" />
-      <workItem from="1551629535597" duration="6762000" />
+      <workItem from="1551629535597" duration="7288000" />
     </task>
     <task id="LOCAL-00001" summary="Adding the base classes to the absyn package, as expressed in the &#10;course slides. This will be the base for the syntax tree creation,&#10;once the logic is in place.">
       <created>1551597232517</created>
@@ -297,17 +278,24 @@
       <option name="project" value="LOCAL" />
       <updated>1551632155443</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Most of the functionality for the absyn package has now been&#10;completed. This has had effects on the ShowTreeVisitor.java class&#10;as well, so this has been added as well.">
+      <created>1551636574856</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1551636574856</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="20318000" />
+    <option name="totallyTimeSpent" value="20844000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="64" y="-11" width="889" height="1018" extended-state="6" />
+    <frame x="64" y="-11" width="1857" height="1027" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24613555" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.11442786" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
@@ -347,7 +335,8 @@
     <MESSAGE value="Scanner is operational, but there are still issues with linking it to the parser. Next step will be to create new parser code without any logic (just the rules)." />
     <MESSAGE value="Adding the base classes to the absyn package, as expressed in the &#10;course slides. This will be the base for the syntax tree creation,&#10;once the logic is in place." />
     <MESSAGE value="Added visitor functionality to the absyn classes, updated the&#10;absynvisitor to compensate for the changes. Full functionality&#10;still not implemented yet." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added visitor functionality to the absyn classes, updated the&#10;absynvisitor to compensate for the changes. Full functionality&#10;still not implemented yet." />
+    <MESSAGE value="Most of the functionality for the absyn package has now been&#10;completed. This has had effects on the ShowTreeVisitor.java class&#10;as well, so this has been added as well." />
+    <option name="LAST_COMMIT_MESSAGE" value="Most of the functionality for the absyn package has now been&#10;completed. This has had effects on the ShowTreeVisitor.java class&#10;as well, so this has been added as well." />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/fac.tiny">
@@ -598,21 +587,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/ShowTreeVisitor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="572">
-          <caret line="112" column="5" selection-start-line="112" selection-start-column="5" selection-end-line="112" selection-end-column="5" />
-          <folding>
-            <element signature="e#152#153#0" expanded="true" />
-            <element signature="e#233#234#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/absyn/SimpleVar.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="170">
           <caret line="10" column="5" selection-start-line="10" selection-start-column="5" selection-end-line="10" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/absyn/IndexVar.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="187">
+          <caret line="11" selection-start-line="11" selection-end-line="11" />
         </state>
       </provider>
     </entry>
@@ -626,10 +611,14 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/absyn/IndexVar.java">
+    <entry file="file://$PROJECT_DIR$/ShowTreeVisitor.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="11" column="4" selection-start-line="11" selection-start-column="4" selection-end-line="11" selection-end-column="4" />
+        <state relative-caret-position="589">
+          <caret line="119" column="49" lean-forward="true" selection-start-line="119" selection-start-column="49" selection-end-line="119" selection-end-column="49" />
+          <folding>
+            <element signature="e#152#153#0" expanded="true" />
+            <element signature="e#233#234#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
