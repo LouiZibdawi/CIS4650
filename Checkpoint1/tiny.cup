@@ -70,7 +70,22 @@ parser code {:
    
    
 /* ------------Declaration of Terminals and Non Terminals Section----------- */
-   
+terminal IF, THEN, ELSE, END, REPEAT, UNTIL, READ, WRITE;
+terminal INT, RETURN, VOID, WHILE;
+terminal ASSIGN, EQ, LT, GT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, SEMI;
+terminal LTE, GTE, COMPARE, NE, COMMA, SQLEFT, SQRIGHT, SQUIGLEFT, SQUIGRIGHT;
+terminal String ID;
+terminal String NUM;
+terminal String COMMENT;
+terminal ERROR;
+
+non terminal Exp program1;
+non terminal ExpList program, stmt_seq;
+non terminal Exp stmt, if_stmt, repeat_stmt, assign_stmt, read_stmt, write_stmt;
+non terminal Exp exp, simple_exp, term, factor;
+
+
+/*ORIGINAL LIST OF TERMINALS AND NON-TERMINALS - USED FOR REFERENCE
 terminal IF, THEN, ELSE, END, REPEAT, UNTIL, READ, WRITE;
 terminal ASSIGN, EQ, LT, GT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, SEMI;
 terminal String ID, NUM;
@@ -80,7 +95,7 @@ non terminal Exp program1;
 non terminal ExpList program, stmt_seq;
 non terminal Exp stmt, if_stmt, repeat_stmt, assign_stmt, read_stmt, write_stmt;
 non terminal Exp exp, simple_exp, term, factor;   
-
+*/
 /* ----------------------------Grammar Section-------------------- */
    
 start with program;

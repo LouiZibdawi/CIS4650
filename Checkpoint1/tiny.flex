@@ -68,25 +68,41 @@ import java_cup.runtime.*;
   These declarations are regular expressions that will be used latter
   in the Lexical Rules Section.  
 */
-   
+
+
+
 /* A line terminator is a \r (carriage return), \n (line feed), or
    \r\n. */
 LineTerminator = \r|\n|\r\n
-   
+
 /* White space is a line terminator, space, tab, or form feed. */
 WhiteSpace     = {LineTerminator} | [ \t\f]
-   
-/* A literal integer is is a number beginning with a number between
-   one and nine followed by zero or more numbers between zero and nine
-   or just a zero.  */
+
+
+//digits defines all numbers, and positiveNegative holds the two symbols needed for the generalized number case
 digit = [0-9]
-number = {digit}+
-   
-/* A identifier integer is a word beginning a letter between A and
-   Z, a and z, or an underscore followed by zero or more letters
-   between A and Z, a and z, zero and nine, or an underscore. */
+positiveNegative = [+-]
+
+//number is built here to make the code below more simple.
+number = {positiveNegative}?({digit}+|{digit}+\.{digit}+|{digit}\.{digit}+)
+numberV2 = [0-9]+
+//all identifiers are letters and numbers, so together the will create an identifier
+lettersAndNumbers = [a-zA-Z0-9]
 letter = [a-zA-Z]
-identifier = {letter}+
+
+//an identifier
+identifier = {lettersAndNumbers}+
+identifierV2 = [_a-zA-Z][_a-zA-Z0-9]*
+
+
+
+//These regex expressions handle hyphenated words, apostrophized words, and the combination words.
+
+hyphenWord = ({identifier}-)+{identifier}
+aposWord = ({identifier}')+{identifier}
+hyphenAndApos = ({identifier}[-\'])+{identifier}+
+
+comment = \/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\/
    
 %%
 /* ------------------------Lexical Rules Section---------------------- */
@@ -95,28 +111,109 @@ identifier = {letter}+
    This section contains regular expressions and actions, i.e. Java
    code, that will be executed when the scanner matches the associated
    regular expression. */
-   
-"if"               { return symbol(sym.IF); }
-"then"             { return symbol(sym.THEN); }
-"else"             { return symbol(sym.ELSE); }
-"end"              { return symbol(sym.END); }
-"repeat"           { return symbol(sym.REPEAT); }
-"until"            { return symbol(sym.UNTIL); }
-"read"             { return symbol(sym.READ); }
-"write"            { return symbol(sym.WRITE); }
-":="               { return symbol(sym.ASSIGN); }
-"="                { return symbol(sym.EQ); }
-"<"                { return symbol(sym.LT); }
-">"                { return symbol(sym.GT); }
-"+"                { return symbol(sym.PLUS); }
-"-"                { return symbol(sym.MINUS); }
-"*"                { return symbol(sym.TIMES); }
-"/"                { return symbol(sym.OVER); }
-"("                { return symbol(sym.LPAREN); }
-")"                { return symbol(sym.RPAREN); }
-";"                { return symbol(sym.SEMI); }
-{number}           { return symbol(sym.NUM, yytext()); }
-{identifier}       { return symbol(sym.ID, yytext()); }
-{WhiteSpace}+      { /* skip whitespace */ }   
-"{"[^\}]*"}"       { /* skip comments */ }
-.                  { return symbol(sym.ERROR); }
+
+//keyword creation
+
+
+
+
+"if"               { System.out.print(yytext());
+                        return symbol(sym.IF); }
+"else"             { System.out.print(yytext());
+return symbol(sym.ELSE); }
+"int"               { System.out.print(yytext());
+return symbol(sym.INT);}
+"return"               { System.out.print(yytext());
+return symbol(sym.RETURN);}
+"void"               { System.out.print(yytext());
+return symbol(sym.VOID);}
+"while"               { System.out.print(yytext());
+return symbol(sym.WHILE);}
+
+// TODO delete these
+"then"             { System.out.print(yytext());
+return symbol(sym.THEN); }
+"end"              { System.out.print(yytext());
+return symbol(sym.END); }
+"repeat"           { System.out.print(yytext());
+return symbol(sym.REPEAT); }
+"until"            { System.out.print(yytext());
+return symbol(sym.UNTIL); }
+"read"             { System.out.print(yytext());
+return symbol(sym.READ); }
+"write"            { System.out.print(yytext());
+return symbol(sym.WRITE); }
+":="               { System.out.print(yytext());
+return symbol(sym.ASSIGN); }
+
+
+
+// TODO create int keyword
+// TODO create return keyword
+// TODO create void keyword
+// TODO create while keyword
+
+// special symbols
+"+"                { System.out.print(yytext());
+return symbol(sym.PLUS); }
+"-"                { System.out.print(yytext());
+return symbol(sym.MINUS); }
+"*"                { System.out.print(yytext());
+return symbol(sym.TIMES); }
+"/"                { System.out.print(yytext());
+return symbol(sym.OVER); }
+"<"                { System.out.print(yytext());
+return symbol(sym.LT); }
+">"                { System.out.print(yytext());
+return symbol(sym.GT); }
+"="                { System.out.print(yytext());
+return symbol(sym.EQ); }
+";"                { System.out.print(yytext());
+return symbol(sym.SEMI); }
+"("                { System.out.print(yytext());
+return symbol(sym.LPAREN); }
+")"                { System.out.print(yytext());
+return symbol(sym.RPAREN); }
+
+"<="                { System.out.print(yytext());
+return symbol(sym.LTE); }
+">="                { System.out.print(yytext());
+return symbol(sym.GTE); }
+"=="                { System.out.print(yytext());
+return symbol(sym.COMPARE); }
+"!="                { System.out.print(yytext());
+return symbol(sym.NE); }
+","                { System.out.print(yytext());
+return symbol(sym.COMMA); }
+"["                { System.out.print(yytext());
+return symbol(sym.SQLEFT); }
+"]"                { System.out.print(yytext());
+return symbol(sym.SQRIGHT); }
+"{"                { System.out.print(yytext());
+return symbol(sym.SQUIGLEFT); }
+"}"                { System.out.print(yytext());
+return symbol(sym.SQUIGRIGHT); }
+
+
+
+
+//Other token definitions
+{numberV2}           { System.out.print(yytext());
+return symbol(sym.NUM, yytext()); }
+{identifierV2}       { System.out.print(yytext());
+return symbol(sym.ID, yytext()); }
+
+
+
+{WhiteSpace}+      { /* skip whitespace */ System.out.print(yytext());}
+
+// TODO create a comment symbol (matches with this one)
+{comment} {System.out.println("COMMENT FOUND, SKIPPING");/*skip comments*/}
+
+.                  { System.err.println("ERROR: Unrecognized character \'" + yytext() +"\' on line " + yyline);
+                     return symbol(sym.ERROR); }
+
+
+
+// TODO remove any uncessary keywords, first by making a list of ones to be removed, then updating the cup file
+

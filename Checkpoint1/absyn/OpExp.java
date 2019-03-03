@@ -8,6 +8,17 @@ public class OpExp extends Exp {
   public final static int EQ    = 4;
   public final static int LT    = 5;
   public final static int GT    = 6;
+  public final static int GTE    = 7;
+  public final static int LTE    = 8;
+  public final static int COMPARE    = 9;
+  public final static int NE    = 10;
+  public final static int COMMA    = 11;
+  public final static int SQLEFT    = 12;
+  public final static int SQRIGHT    = 13;
+  public final static int SQUIGLEFT    = 14;
+  public final static int SQUIGRIGHT    = 15;
+  public final static int COMMENT    = 16;
+
 
   public Exp left;
   public int op;

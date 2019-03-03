@@ -1,8 +1,8 @@
-{ Sample program in Tiny language - compute factorial }
+/* Sample program in Tiny language - compute factorial */
 
-read x; { input an integer }
+read x; /* input an integer */
 
-if x > 0 then { don't compute if x <= 0 }
+if x > 0 then /* don't compute if x <= 0 */
 
   fact := 1;
 
@@ -17,7 +17,7 @@ if x > 0 then { don't compute if x <= 0 }
     x := x - 1
   until x = 0;
 
-  write fact { output factorial of x } 
+  write fact /* output factorial of x */ 
 
 end
 
