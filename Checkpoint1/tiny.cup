@@ -80,8 +80,10 @@ terminal ERROR;
 
 non terminal program;
 non terminal dec_list, dec, var_dec, fun_dec, params, comp_stmt, param_list, param, local_dec, stmt_list;
-non terminal stmt, expr, var;
-non terminal factor, arg_list;
+non terminal stmt;
+non terminal Exp expr, factor; // done
+non terminal Var var; // done
+non terminal arg_list;
 non terminal type_spec;
 
 precedence left PLUS, MINUS;
@@ -152,21 +154,35 @@ stmt        ::= comp_stmt:cs
 			;
 
 expr        ::= var:v EQ expr:e
+				{: RESULT = new AssignExp(vleft, v, e); :}
 			|   expr:ae1 LTE expr:ae2
+				{: RESULT = new OpExp(ae1left, ae1, OpExp.LTE, ae2); :}
             |   expr:ae1 LT expr:ae2
+                {: RESULT = new OpExp(ae1left, ae1, OpExp.LT, ae2); :}
             |   expr:ae1 GT expr:ae2
+                {: RESULT = new OpExp(ae1left, ae1, OpExp.GT, ae2); :}
             |   expr:ae1 GTE expr:ae2
+                {: RESULT = new OpExp(ae1left, ae1, OpExp.GTE, ae2); :}
             |   expr:ae1 COMPARE expr:ae2
+                {: RESULT = new OpExp(ae1left, ae1, OpExp.COMPARE, ae2); :}
             |   expr:ae1 NE expr:ae2
+                {: RESULT = new OpExp(ae1left, ae1, OpExp.NE, ae2); :}
             |   expr:ae1 PLUS expr:ae2
+                {: RESULT = new OpExp(ae1left, ae1, OpExp.PLUS, ae2); :}
             |   expr:ae1 MINUS expr:ae2
+                {: RESULT = new OpExp(ae1left, ae1, OpExp.MINUS, ae2); :}
             |   expr:ae1 TIMES expr:ae2
+                {: RESULT = new OpExp(ae1left, ae1, OpExp.TIMES, ae2); :}
             |   expr:ae1 OVER expr:ae2
-            |   factor:f
+                {: RESULT = new OpExp(ae1left, ae1, OpExp.OVER, ae2); :}
+            |   factor:f // huh: correct class?
+                {: RESULT = f; :}
             ;
 
-var         ::= ID
-			|   ID SQLEFT expr:e SQRIGHT
+var         ::= ID:i
+				{: RESULT = new SimpleVar(ileft, i); :}
+			|   ID:i SQLEFT expr:e SQRIGHT
+				{: RESULT = new IndexVar(ileft, i, e); :}
 			;
 
 factor      ::= LPAREN expr:e RPAREN
