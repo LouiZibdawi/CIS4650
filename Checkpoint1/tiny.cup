@@ -186,7 +186,7 @@ stmt_list   ::= stmt_list:sl stmt:s
 			;
 
 stmt        ::= comp_stmt:cs
-				{: RESULT = cs; :}
+				{: RESULT = cs; :} // should this be new CompoundExp?
 			|   expr:e SEMI
 				{: RESULT = e; :}
             |   SEMI:s

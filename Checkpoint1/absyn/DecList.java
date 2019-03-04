@@ -1,7 +1,6 @@
 package absyn;
 
 public class DecList extends Absyn{
-
     public Dec head;
     public DecList tail;
 
@@ -10,9 +9,7 @@ public class DecList extends Absyn{
         this.tail = tail;
     }
 
-
     public void accept( AbsynVisitor visitor, int level ) {
         visitor.visit( this, level );
     }
-
 }
