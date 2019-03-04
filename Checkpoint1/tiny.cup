@@ -80,19 +80,18 @@ terminal ERROR;
 
 non terminal program;
 non terminal dec_list, dec, var_dec, fun_dec, params, comp_stmt, param_list, param, local_dec, stmt_list;
-non terminal stmt, expr_stmt, sel_stmt, iter_stmt, ret_stmt, expr, var, simp_expr ;
-non terminal factor, call, args, arg_list;
+non terminal stmt, expr, var;
+non terminal factor, arg_list;
 non terminal type_spec;
 
 precedence left PLUS, MINUS;
 precedence left TIMES, OVER;
-precedence right UMINUS;
+precedence right UMINUS; // add uminus rules?
 precedence nonassoc EQ, LT, GT, LTE, GTE, NE, COMPARE;
 
 /* ----------------------------Grammar Section-------------------- */
 
 // TODO: add logic
-// TODO: simplify grammar with precedence and associativities
 
 start with program;
 
@@ -142,60 +141,39 @@ stmt_list   ::= stmt_list:sl stmt:s
 			|
 			;
 
-stmt        ::= expr_stmt:es
-			|   comp_stmt:cs
-			|   sel_stmt:ss
-			|   iter_stmt:is
-			|   ret_stmt:rs
-			;
-
-expr_stmt   ::= expr:e SEMI
-			|   SEMI
-			;
-
-sel_stmt    ::= IF LPAREN expr:e RPAREN stmt:s
-			|   IF LPAREN expr:e RPAREN stmt:s1 ELSE stmt:s2
-			;
-
-iter_stmt   ::= WHILE LPAREN expr:e RPAREN stmt:s
-			;
-
-ret_stmt    ::= RETURN expr:e SEMI
-			|   RETURN SEMI
+stmt        ::= comp_stmt:cs
+			|   expr:e SEMI
+            |   SEMI
+			|   IF LPAREN expr:e RPAREN stmt:s
+            |   IF LPAREN expr:e RPAREN stmt:s1 ELSE stmt:s2
+			|   WHILE LPAREN expr:e RPAREN stmt:s
+			|   RETURN expr:e SEMI
+            |   RETURN SEMI
 			;
 
 expr        ::= var:v EQ expr:e
-			|   simp_expr:se
-			;
+			|   expr:ae1 LTE expr:ae2
+            |   expr:ae1 LT expr:ae2
+            |   expr:ae1 GT expr:ae2
+            |   expr:ae1 GTE expr:ae2
+            |   expr:ae1 COMPARE expr:ae2
+            |   expr:ae1 NE expr:ae2
+            |   expr:ae1 PLUS expr:ae2
+            |   expr:ae1 MINUS expr:ae2
+            |   expr:ae1 TIMES expr:ae2
+            |   expr:ae1 OVER expr:ae2
+            |   factor:f
+            ;
 
 var         ::= ID
 			|   ID SQLEFT expr:e SQRIGHT
 			;
 
-simp_expr   ::= simp_expr:ae1 LTE simp_expr:ae2
-            |   simp_expr:ae1 LT simp_expr:ae2
-            |   simp_expr:ae1 GT simp_expr:ae2
-            |   simp_expr:ae1 GTE simp_expr:ae2
-            |   simp_expr:ae1 COMPARE simp_expr:ae2
-            |   simp_expr:ae1 NE simp_expr:ae2
-            |   simp_expr:ae1 PLUS simp_expr:ae2
-	        |   simp_expr:ae1 MINUS simp_expr:ae2
-			|   simp_expr:ae1 TIMES simp_expr:ae2
-            |   simp_expr:ae1 OVER simp_expr:ae2
-            |   factor:f
-			;
-
 factor      ::= LPAREN expr:e RPAREN
 			|   var:v
-			|   call:c
+			|   ID LPAREN arg_list:al RPAREN
+			|   ID LPAREN RPAREN
 			|   NUM
-			;
-
-call        ::= ID LPAREN args:a RPAREN
-			;
-
-args        ::= arg_list:al
-			|
 			;
 
 arg_list    ::= arg_list:al COMMA expr:e
