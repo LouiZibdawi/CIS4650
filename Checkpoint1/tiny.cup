@@ -82,7 +82,8 @@ non terminal DecList program, dec_list;
 non terminal Dec dec, fun_dec;
 non terminal VarDecList local_dec, param_list;
 non terminal VarDec var_dec, param;
-non terminal Exp expr, factor, stmt, comp_stmt;
+non terminal Exp expr, factor, stmt;
+non terminal CompoundExp comp_stmt;
 non terminal Var var;
 non terminal ExpList arg_list, stmt_list;
 non terminal NameTy type_spec;
@@ -130,9 +131,9 @@ type_spec   ::= INT:i
 			;
 
 fun_dec     ::= type_spec:ts ID:i LPAREN param_list:pl RPAREN comp_stmt:cs
-				{: RESULT = new FunctionDec(tsleft, ts, i, pl, (CompoundExp) cs); :} // problem here?
+				{: RESULT = new FunctionDec(tsleft, ts, i, pl, cs); :} // problem here?
 			|   type_spec:ts ID:i LPAREN VOID RPAREN comp_stmt:cs
-                {: RESULT = new FunctionDec(tsleft, ts, i, null, (CompoundExp) cs); :}
+                {: RESULT = new FunctionDec(tsleft, ts, i, null, cs); :}
 			;
 
 param_list  ::= param_list:pl COMMA param:p
@@ -154,6 +155,12 @@ param       ::= type_spec:ts ID:i
 
 comp_stmt   ::= SQUIGLEFT:s local_dec:ld stmt_list:sl SQUIGRIGHT
 				{: RESULT = new CompoundExp(sleft, ld, sl); :}
+			|   SQUIGLEFT:s stmt_list:sl SQUIGRIGHT
+				{: RESULT = new CompoundExp(sleft, null, sl); :}
+			|   SQUIGLEFT:s local_dec:ld SQUIGRIGHT
+				{: RESULT = new CompoundExp(sleft, ld, null); :}
+			|   SQUIGLEFT:s SQUIGRIGHT
+				{: RESULT = new CompoundExp(sleft, null, null); :}
 			;
 
 local_dec   ::= local_dec:ld var_dec:vd
@@ -163,8 +170,8 @@ local_dec   ::= local_dec:ld var_dec:vd
                     varDecs.tail = new VarDecList(vd, null);
                     RESULT = ld;
                 :}
-			|
-				{: RESULT = null; :}
+			|   var_dec:vd
+				{: RESULT = new VarDecList(vd, null); :}
 			;
 
 stmt_list   ::= stmt_list:sl stmt:s
@@ -174,8 +181,8 @@ stmt_list   ::= stmt_list:sl stmt:s
                     stmts.tail = new ExpList(s, null);
                     RESULT = sl;
                 :}
-			|
-				{: RESULT = null; :}
+			|   stmt:s
+				{: RESULT = new ExpList(s, null); :}
 			;
 
 stmt        ::= comp_stmt:cs
