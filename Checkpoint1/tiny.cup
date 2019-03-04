@@ -75,10 +75,10 @@ terminal INT, RETURN, VOID, WHILE;
 terminal EQ, LT, GT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, SEMI, UMINUS;
 terminal LTE, GTE, COMPARE, NE, COMMA, SQLEFT, SQRIGHT, SQUIGLEFT, SQUIGRIGHT;
 terminal String ID;
-terminal Integer NUM;
+terminal String NUM;
 terminal ERROR;
 
-non terminal program;
+non terminal program; //done?
 non terminal dec_list, dec, var_dec, fun_dec, params, comp_stmt, param_list, param, local_dec, stmt_list;
 non terminal stmt;
 non terminal Exp expr, factor; // done
@@ -98,7 +98,6 @@ precedence nonassoc EQ, LT, GT, LTE, GTE, NE, COMPARE;
 start with program;
 
 program     ::= dec_list:dl
-
 			;
 
 dec_list    ::= dec_list:dl dec:d
@@ -148,9 +147,13 @@ stmt        ::= comp_stmt:cs
             |   SEMI
 			|   IF LPAREN expr:e RPAREN stmt:s
             |   IF LPAREN expr:e RPAREN stmt:s1 ELSE stmt:s2
-			|   WHILE LPAREN expr:e RPAREN stmt:s
-			|   RETURN expr:e SEMI
-            |   RETURN SEMI
+//                {: RESULT = new IfExp(eleft,eright,e,s1,s2); :} //BROKEN
+			|   WHILE:r LPAREN expr:e RPAREN stmt:s
+//			    {: RESULT = new WhileExp(rleft,e,s); :} //BROKEN
+			|   RETURN:r expr:e SEMI
+			    {: RESULT = new ReturnExp(rleft, e); :}
+            |   RETURN:r SEMI
+                {: RESULT = new ReturnExp(rleft, null); :}
 			;
 
 expr        ::= var:v EQ expr:e
@@ -194,7 +197,8 @@ factor      ::= LPAREN expr:e RPAREN
 			|   ID:i LPAREN RPAREN
 				{: RESULT = new CallExp(ileft, i, null); :}
 			|   NUM:n
-				{: RESULT = new IntExp(nleft, n); :}
+				{:
+				RESULT = new IntExp(nleft, Integer.parseInt(n)); :}
 			;
 
 arg_list    ::= arg_list:al COMMA expr:e
