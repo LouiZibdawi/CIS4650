@@ -5,8 +5,9 @@ public class NameTy extends Absyn{
     public final static int VOID = 1;
 
     public int typ;
-    public NameTy(int pos, int typ)
-    {
+
+    public NameTy(int pos, int typ) {
+        this.pos = pos;
         this.typ = typ;
     }
 

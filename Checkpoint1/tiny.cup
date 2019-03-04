@@ -78,13 +78,14 @@ terminal String ID;
 terminal String NUM;
 terminal ERROR;
 
-non terminal program; //done?
-non terminal dec_list, dec, var_dec, fun_dec, params, comp_stmt, param_list, param, local_dec, stmt_list;
-non terminal stmt;
-non terminal Exp expr, factor; // done
-non terminal Var var; // done
-non terminal ExpList arg_list; // done
-non terminal type_spec;
+non terminal DecList program, dec_list;
+non terminal Dec dec, fun_dec;
+non terminal VarDecList local_dec, param_list;
+non terminal VarDec var_dec, param;
+non terminal Exp expr, factor, stmt, comp_stmt;
+non terminal Var var;
+non terminal ExpList arg_list, stmt_list;
+non terminal NameTy type_spec;
 
 precedence left PLUS, MINUS;
 precedence left TIMES, OVER;
@@ -93,63 +94,102 @@ precedence nonassoc EQ, LT, GT, LTE, GTE, NE, COMPARE;
 
 /* ----------------------------Grammar Section-------------------- */
 
-// TODO: add logic
-
 start with program;
 
 program     ::= dec_list:dl
+				{: RESULT = dl; :}
 			;
 
 dec_list    ::= dec_list:dl dec:d
+				{:  DecList decs = dl;
+                    while (decs.tail != null)
+                        decs = decs.tail;
+                    decs.tail = new DecList(d, null);
+                    RESULT = dl;
+                :}
 			|   dec:d
+				{: RESULT = new DecList(d, null); :}
 			;
 
 dec         ::= var_dec:vd
+				{: RESULT = vd; :}
 			|   fun_dec:fd
+				{: RESULT = fd; :}
 			;
 
-var_dec     ::= type_spec:ts ID SEMI
-			|   type_spec:ts ID SQLEFT NUM SQRIGHT SEMI
+var_dec     ::= type_spec:ts ID:i SEMI
+				{: RESULT = new SimpleDec(tsleft, ts, i); :}
+			|   type_spec:ts ID:i SQLEFT NUM:n SQRIGHT SEMI
+				{: RESULT = new ArrayDec(tsleft, ts, i, new IntExp(nleft, Integer.parseInt(n))); :}
 			;
 
-type_spec   ::= INT
-			|   VOID
+type_spec   ::= INT:i
+				{: RESULT = new NameTy(ileft, NameTy.INT); :}
+			|   VOID:v
+				{: RESULT = new NameTy(vleft, NameTy.VOID); :}
 			;
 
-fun_dec     ::= type_spec:ts ID LPAREN params:p RPAREN comp_stmt:cs
-			;
-
-params      ::= param_list:pl
-			|   VOID
+fun_dec     ::= type_spec:ts ID:i LPAREN param_list:pl RPAREN comp_stmt:cs
+				{: RESULT = new FunctionDec(tsleft, ts, i, pl, (CompoundExp) cs); :} // problem here?
+			|   type_spec:ts ID:i LPAREN VOID RPAREN comp_stmt:cs
+                {: RESULT = new FunctionDec(tsleft, ts, i, null, (CompoundExp) cs); :}
 			;
 
 param_list  ::= param_list:pl COMMA param:p
+				{:  VarDecList parms = pl;
+                    while (parms.tail != null)
+                        parms = parms.tail;
+                    parms.tail = new VarDecList(p, null);
+                    RESULT = pl;
+                :}
 			|   param:p
+				{: RESULT = new VarDecList(p, null); :}
 			;
 
-param       ::= type_spec:ts ID
-			|   type_spec:ts ID SQLEFT SQRIGHT
+param       ::= type_spec:ts ID:i
+				{: RESULT = new SimpleDec(tsleft, ts, i); :}
+			|   type_spec:ts ID:i SQLEFT SQRIGHT
+				{: RESULT = new ArrayDec(tsleft, ts, i, null); :}
 			;
 
-comp_stmt   ::= SQUIGLEFT local_dec:ld stmt_list:sl SQUIGRIGHT
+comp_stmt   ::= SQUIGLEFT:s local_dec:ld stmt_list:sl SQUIGRIGHT
+				{: RESULT = new CompoundExp(sleft, ld, sl); :}
 			;
 
 local_dec   ::= local_dec:ld var_dec:vd
+				{:  VarDecList varDecs = ld;
+                    while (varDecs.tail != null)
+                        varDecs = varDecs.tail;
+                    varDecs.tail = new VarDecList(vd, null);
+                    RESULT = ld;
+                :}
 			|
+				{: RESULT = null; :}
 			;
 
 stmt_list   ::= stmt_list:sl stmt:s
+				{:  ExpList stmts = sl;
+                    while (stmts.tail != null)
+                        stmts = stmts.tail;
+                    stmts.tail = new ExpList(s, null);
+                    RESULT = sl;
+                :}
 			|
+				{: RESULT = null; :}
 			;
 
 stmt        ::= comp_stmt:cs
+				{: RESULT = cs; :}
 			|   expr:e SEMI
-            |   SEMI
-			|   IF LPAREN expr:e RPAREN stmt:s
-            |   IF LPAREN expr:e RPAREN stmt:s1 ELSE stmt:s2
-//                {: RESULT = new IfExp(eleft,eright,e,s1,s2); :} //BROKEN
-			|   WHILE:r LPAREN expr:e RPAREN stmt:s
-//			    {: RESULT = new WhileExp(rleft,e,s); :} //BROKEN
+				{: RESULT = e; :}
+            |   SEMI:s
+                {: RESULT = new NilExp(sleft); :}
+			|   IF:i LPAREN expr:e RPAREN stmt:s
+				{: RESULT = new IfExp(ileft, e, s, null); :}
+            |   IF:i LPAREN expr:e RPAREN stmt:s1 ELSE stmt:s2
+                {: RESULT = new IfExp(ileft, e, s1, s2); :}
+			|   WHILE:w LPAREN expr:e RPAREN stmt:s
+			    {: RESULT = new WhileExp(wleft, e, s); :}
 			|   RETURN:r expr:e SEMI
 			    {: RESULT = new ReturnExp(rleft, e); :}
             |   RETURN:r SEMI
@@ -197,8 +237,7 @@ factor      ::= LPAREN expr:e RPAREN
 			|   ID:i LPAREN RPAREN
 				{: RESULT = new CallExp(ileft, i, null); :}
 			|   NUM:n
-				{:
-				RESULT = new IntExp(nleft, Integer.parseInt(n)); :}
+				{: RESULT = new IntExp(nleft, Integer.parseInt(n)); :}
 			;
 
 arg_list    ::= arg_list:al COMMA expr:e
