@@ -68,38 +68,17 @@ import java_cup.runtime.*;
   in the Lexical Rules Section.
 */
 
-
-
-/* A line terminator is a \r (carriage return), \n (line feed), or
-   \r\n. */
+/* A line terminator is a \r (carriage return), \n (line feed), or \r\n. */
 LineTerminator = \r|\n|\r\n
 
 /* White space is a line terminator, space, tab, or form feed. */
 WhiteSpace     = {LineTerminator} | [ \t\f]
 
-
-//digits defines all numbers, and positiveNegative holds the two symbols needed for the generalized number case
-digit = [0-9]
-positiveNegative = [+-]
-
-//number is built here to make the code below more simple.
-number = {positiveNegative}?({digit}+|{digit}+\.{digit}+|{digit}\.{digit}+)
+// number is built here to make the code below more simple.
 numberV2 = [0-9]+
-//all identifiers are letters and numbers, so together the will create an identifier
-lettersAndNumbers = [a-zA-Z0-9]
-letter = [a-zA-Z]
 
-//an identifier
-identifier = {lettersAndNumbers}+
+// identifier
 identifierV2 = [_a-zA-Z][_a-zA-Z0-9]*
-
-
-
-//These regex expressions handle hyphenated words, apostrophized words, and the combination words.
-
-hyphenWord = ({identifier}-)+{identifier}
-aposWord = ({identifier}')+{identifier}
-hyphenAndApos = ({identifier}[-\'])+{identifier}+
 
 comment = \/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\/
 
@@ -112,9 +91,6 @@ comment = \/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\/
    regular expression. */
 
 //keyword creation
-
-
-
 
 "if"               { System.out.print(yytext());
                         return symbol(sym.IF); }
@@ -129,13 +105,8 @@ comment = \/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\/
 "while"            { System.out.print(yytext());
 						return symbol(sym.WHILE); }
 
-
-// TODO create int keyword
-// TODO create return keyword
-// TODO create void keyword
-// TODO create while keyword
-
 // special symbols
+
 "+"                { System.out.print(yytext());
 						return symbol(sym.PLUS); }
 "-"                { System.out.print(yytext());
@@ -156,7 +127,6 @@ comment = \/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\/
 						return symbol(sym.LPAREN); }
 ")"                { System.out.print(yytext());
 						return symbol(sym.RPAREN); }
-
 "<="               { System.out.print(yytext());
 						return symbol(sym.LTE); }
 ">="               { System.out.print(yytext());
@@ -176,23 +146,13 @@ comment = \/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\/
 "}"                { System.out.print(yytext());
 						return symbol(sym.SQUIGRIGHT); }
 
-
-
-
 //Other token definitions
+
 {numberV2}         { System.out.print(yytext());
 						return symbol(sym.NUM, yytext()); }
 {identifierV2}     { System.out.print(yytext());
 						return symbol(sym.ID, yytext()); }
-
-
-
 {WhiteSpace}+      { /* skip whitespace */ System.out.print(yytext()); }
-
-// TODO create a comment symbol (matches with this one)
 {comment}          { System.out.println("COMMENT FOUND, SKIPPING"); /*skip comments*/ }
-
 .                  { System.err.println("ERROR: Unrecognized character \'" + yytext() +"\' on line " + yyline);
                         return symbol(sym.ERROR); }
-
-// TODO remove any uncessary keywords, first by making a list of ones to be removed, then updating the cup file

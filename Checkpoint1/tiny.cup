@@ -72,25 +72,32 @@ parser code {:
 /* ------------Declaration of Terminals and Non Terminals Section----------- */
 terminal IF, ELSE;
 terminal INT, RETURN, VOID, WHILE;
-terminal EQ, LT, GT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, SEMI;
+terminal EQ, LT, GT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, SEMI, UMINUS;
 terminal LTE, GTE, COMPARE, NE, COMMA, SQLEFT, SQRIGHT, SQUIGLEFT, SQUIGRIGHT;
 terminal String ID;
-terminal String NUM;
-terminal String COMMENT;
+terminal Integer NUM;
 terminal ERROR;
 
-non terminal ExpList program;
-non terminal Exp dec_list, dec, var_dec, fun_dec, type_spec, params, comp_stmt, param_list, param, local_dec, stmt_list;
-non terminal Exp stmt, expr_stmt, sel_stmt, iter_stmt, ret_stmt, expr, var, simp_expr, add_expr, relop, addop, term;
-non terminal Exp mulop, factor, call, args, arg_list;
+non terminal program;
+non terminal dec_list, dec, var_dec, fun_dec, params, comp_stmt, param_list, param, local_dec, stmt_list;
+non terminal stmt, expr_stmt, sel_stmt, iter_stmt, ret_stmt, expr, var, simp_expr ;
+non terminal factor, call, args, arg_list;
+non terminal type_spec;
+
+precedence left PLUS, MINUS;
+precedence left TIMES, OVER;
+precedence right UMINUS;
+precedence nonassoc EQ, LT, GT, LTE, GTE, NE, COMPARE;
 
 /* ----------------------------Grammar Section-------------------- */
 
+// TODO: add logic
 // TODO: simplify grammar with precedence and associativities
 
 start with program;
 
 program     ::= dec_list:dl
+
 			;
 
 dec_list    ::= dec_list:dl dec:d
@@ -165,32 +172,17 @@ var         ::= ID
 			|   ID SQLEFT expr:e SQRIGHT
 			;
 
-simp_expr   ::= add_expr:ae1 relop:r add_expr:ae2
-			|   add_expr:ae
-			;
-
-relop       ::= LTE
-			|   LT
-			|   GT
-			|   GTE
-			|   COMPARE
-			|   NE
-			;
-
-add_expr    ::= add_expr:ae addop:a term:t
-			|   term:t
-			;
-
-addop       ::= PLUS
-			|   MINUS
-			;
-
-term        ::= term:t mulop:m factor:f
-			|   factor:f
-			;
-
-mulop       ::= TIMES
-			|   OVER
+simp_expr   ::= simp_expr:ae1 LTE simp_expr:ae2
+            |   simp_expr:ae1 LT simp_expr:ae2
+            |   simp_expr:ae1 GT simp_expr:ae2
+            |   simp_expr:ae1 GTE simp_expr:ae2
+            |   simp_expr:ae1 COMPARE simp_expr:ae2
+            |   simp_expr:ae1 NE simp_expr:ae2
+            |   simp_expr:ae1 PLUS simp_expr:ae2
+	        |   simp_expr:ae1 MINUS simp_expr:ae2
+			|   simp_expr:ae1 TIMES simp_expr:ae2
+            |   simp_expr:ae1 OVER simp_expr:ae2
+            |   factor:f
 			;
 
 factor      ::= LPAREN expr:e RPAREN
