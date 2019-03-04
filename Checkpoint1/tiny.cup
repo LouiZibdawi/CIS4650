@@ -83,7 +83,7 @@ non terminal dec_list, dec, var_dec, fun_dec, params, comp_stmt, param_list, par
 non terminal stmt;
 non terminal Exp expr, factor; // done
 non terminal Var var; // done
-non terminal arg_list;
+non terminal ExpList arg_list; // done
 non terminal type_spec;
 
 precedence left PLUS, MINUS;
@@ -186,12 +186,24 @@ var         ::= ID:i
 			;
 
 factor      ::= LPAREN expr:e RPAREN
+				{: RESULT = e; :}
 			|   var:v
-			|   ID LPAREN arg_list:al RPAREN
-			|   ID LPAREN RPAREN
-			|   NUM
+				{: RESULT = new VarExp(vleft, v); :}
+			|   ID:i LPAREN arg_list:al RPAREN
+				{: RESULT = new CallExp(ileft, i, al); :}
+			|   ID:i LPAREN RPAREN
+				{: RESULT = new CallExp(ileft, i, null); :}
+			|   NUM:n
+				{: RESULT = new IntExp(nleft, n); :}
 			;
 
 arg_list    ::= arg_list:al COMMA expr:e
+				{:  ExpList existingArgs = al;
+					while (existingArgs.tail != null)
+						existingArgs = existingArgs.tail;
+					existingArgs.tail = new ExpList(e, null);
+					RESULT = al;
+				:}
 			|   expr:e
+				{: RESULT = new ExpList(e, null); :}
 			;
