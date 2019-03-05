@@ -2,12 +2,12 @@ JAVA=java
 JAVAC=javac
 JFLEX=jflex
 CLASSPATH=-classpath ./jars/cup.jar
-CUP=$(JAVA) $(CLASSPATH) java_cup.Main
+CUP=$(JAVA) $(CLASSPATH) java_cup.CM
 #CUP=cup
 
-all: Main.class
+all: CM.class
 
-Main.class: absyn/*.java parser.java sym.java Lexer.java ShowTreeVisitor.java Scanner.java Main.java
+CM.class: absyn/*.java parser.java sym.java Lexer.java ShowTreeVisitor.java Scanner.java CM.java
 
 %.class: %.java
 	$(JAVAC) $(CLASSPATH)  $^
@@ -20,22 +20,22 @@ parser.java: cminus.cup
 	$(CUP) -expect 3 < cminus.cup
 
 test1:
-	java -classpath ./jars/cup.jar: Main input/1.cm
+	java -classpath ./jars/cup.jar: CM input/1.cm
 
 test2:
-	java -classpath ./jars/cup.jar: Main input/2.cm
+	java -classpath ./jars/cup.jar: CM input/2.cm
 
 test3:
-	java -classpath ./jars/cup.jar: Main input/3.cm
+	java -classpath ./jars/cup.jar: CM input/3.cm
 
 test4:
-	java -classpath ./jars/cup.jar: Main input/4.cm
+	java -classpath ./jars/cup.jar: CM input/4.cm
 
 test5:
-	java -classpath ./jars/cup.jar: Main input/5.cm
+	java -classpath ./jars/cup.jar: CM input/5.cm
 
 clean:
 	rm -f parser.java Lexer.java sym.java *.class absyn/*.class *~
 
 tiny:
-	java -classpath /usr/share/java/cup.jar:. Main fac.tiny
+	java -classpath /usr/share/java/cup.jar:. CM fac.tiny
