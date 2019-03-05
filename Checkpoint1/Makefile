@@ -19,6 +19,21 @@ parser.java: tiny.cup
 	#$(CUP) -dump -expect 3 tiny.cup
 	$(CUP) -expect 3 < tiny.cup
 
+test1:
+	java -classpath ./jars/cup.jar: Main 1.cm
+
+test2:
+	java -classpath ./jars/cup.jar: Main 2.cm
+
+test3:
+	java -classpath ./jars/cup.jar: Main 3.cm
+
+test4:
+	java -classpath ./jars/cup.jar: Main 4.cm
+
+test5:
+	java -classpath ./jars/cup.jar: Main 5.cm
+
 clean:
 	rm -f parser.java Lexer.java sym.java *.class absyn/*.class *~
 
