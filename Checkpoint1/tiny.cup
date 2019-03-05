@@ -72,11 +72,10 @@ parser code {:
 /* ------------Declaration of Terminals and Non Terminals Section----------- */
 terminal IF, ELSE;
 terminal INT, RETURN, VOID, WHILE;
-terminal EQ, LT, GT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, SEMI; //, UMINUS;
+terminal EQ, LT, GT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, SEMI;
 terminal LTE, GTE, COMPARE, NE, COMMA, SQLEFT, SQRIGHT, SQUIGLEFT, SQUIGRIGHT;
 terminal String ID;
 terminal String NUM;
-terminal ERROR;
 
 non terminal DecList program, dec_list;
 non terminal Dec dec, fun_dec;
@@ -88,11 +87,10 @@ non terminal Var var;
 non terminal ExpList arg_list, stmt_list;
 non terminal NameTy type_spec;
 
-precedence right EQ;
+precedence right EQ; // assign
 precedence nonassoc LT, GT, LTE, GTE, NE, COMPARE;
 precedence left PLUS, MINUS;
 precedence left TIMES, OVER;
-//precedence right UMINUS; // add uminus rules?
 
 /* ----------------------------Grammar Section-------------------- */
 
@@ -111,6 +109,8 @@ dec_list    ::= dec_list:dl dec:d
                 :}
 			|   dec:d
 				{: RESULT = new DecList(d, null); :}
+			|   error:e // here
+				{: report_fatal_error("Invalid syntax", e); :}
 			;
 
 dec         ::= var_dec:vd
@@ -123,6 +123,16 @@ var_dec     ::= type_spec:ts ID:i SEMI
 				{: RESULT = new SimpleDec(tsleft, ts, i); :}
 			|   type_spec:ts ID:i SQLEFT NUM:n SQRIGHT SEMI
 				{: RESULT = new ArrayDec(tsleft, ts, i, new IntExp(nleft, Integer.parseInt(n))); :}
+			|   error:e ID:i SEMI // here
+				{:  report_error("Invalid syntax", e);
+					RESULT = new SimpleDec(eleft, new NameTy(eleft, NameTy.INT), i); :}
+			|   error:e ID:i SQLEFT NUM:n SQRIGHT SEMI // here
+				{:  report_error("Invalid syntax", e);
+					RESULT = new ArrayDec(eleft, new NameTy(eleft, NameTy.INT), i, new IntExp(nleft, Integer.parseInt(n))); :}
+			|   type_spec:ts ID:i SQLEFT error:e SQRIGHT SEMI // here
+				{: report_error("Invalid syntax", e); :}
+			|   type_spec:ts error:e SEMI
+				{: report_error("Invalid syntax", e); :}
 			;
 
 type_spec   ::= INT:i
@@ -135,6 +145,16 @@ fun_dec     ::= type_spec:ts ID:i LPAREN param_list:pl RPAREN comp_stmt:cs
 				{: RESULT = new FunctionDec(tsleft, ts, i, pl, cs); :}
 			|   type_spec:ts ID:i LPAREN VOID RPAREN comp_stmt:cs
                 {: RESULT = new FunctionDec(tsleft, ts, i, null, cs); :}
+            |   type_spec:ts ID:i LPAREN param_list:pl RPAREN error:e
+                {: report_error("Invalid syntax", e); :}
+            |   type_spec:ts ID:i LPAREN VOID RPAREN error:e
+                {: report_error("Invalid syntax", e); :}
+            |   error:e ID:i LPAREN param_list:pl RPAREN comp_stmt:cs
+                {:  report_error("Invalid syntax", e);
+                    RESULT = new FunctionDec(eleft, new NameTy(eleft, NameTy.INT), i, pl, cs); :}
+            |   error:e ID:i LPAREN VOID RPAREN comp_stmt:cs
+                {:  report_error("Invalid syntax", e);
+                    RESULT = new FunctionDec(eleft, new NameTy(eleft, NameTy.INT), i, null, cs); :}
 			;
 
 param_list  ::= param_list:pl COMMA param:p

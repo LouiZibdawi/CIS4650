@@ -128,4 +128,4 @@ comment = \/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\/
 {WhiteSpace}+      { /* skip whitespace */ }
 {comment}          { /* skip comments */ }
 .                  { System.err.println("ERROR: Unrecognized character \'" + yytext() +"\' on line " + yyline);
-                        return symbol(sym.ERROR); }
+                        return symbol(sym.error); }
