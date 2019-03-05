@@ -29,93 +29,70 @@ generated from compilation, type "make clean".
 
 Testing has been automated into separate test files to test different components of the code. There
 are five test files used for this program, as this was the maximum number of test files that we
-were allow to submit. These tests, therefore, attempt to show both the functionality and the error
+were allowed to submit. These tests, therefore, attempt to show both the functionality and the error
 recovery abilities of the program to the best of their ability, while also being limited to the
-number of errors that can be shown (max. 3 per file). The fifth file has no restrictions, and has been
-filled with as many errors as possible. These tests include both positive and negative test cases to 
-show off both correct and incorrect code structures. The files are listed below with a short description
-of what is contained inside of them:
+number of errors that can be shown (max. 3 per file). The fifth file has no restrictions on the
+number of errors that can be contained in it, and has been filled with as many errors as possible.
+These tests include both positive and negative test cases to show off both correct and incorrect
+code structures. The files are listed below with a short description of what is contained inside of them:
 
-   1) <Insert descriptions here>
-   2) <Insert descriptions here>
-   3) <Insert descriptions here>
-   4) <Insert descriptions here>
-   5) <Insert descriptions here>
+   1) 1.cm: This is a modified version of the fac.cm that was provided for use by the professor. The
+      errors included in this are as follows:
+        - Unrecognized type for variables are handled by converting to integer (default)
+        - Unrecognized type for arrays are handled by converting to integer (default)
+      We decided that the best way to handle an invalid type would be to set it to a default value and
+      continue parsing the file. Obviously, this is likely not the best option for a full parser, but
+      for the current scale of the project it makes sense. There are only two variable types, one of 
+      which is void, so converting it to integer is the most logical.
 
+   2) 2.cm: This is another modified version of the fac.cm that was provided to us for use by the professor.
+      The errors included in this are as follows:
+        - function declaraction with no parameters and without a body
+        - variable declaration without a recognized type 
+   3) 3.cm: This is another modified version of the fac.cm that was provided to us for use by the professor. 
+      The errors included in this are as follows:
+        - function declaration with parameters, without a body
+        - array declaraction without a recognized type
 
-  
-these files are unit tests, such that they test specific components of the scanner (hyphenated words,
-for example). These tests include both positive and negative test cases for each of the regular expressions. 
-These files are listed below with a short description:
+   4) 4.cm: This is a modified version for gcd.cm that was provided to us by the professor. The
+      errors included are as follows:
+        - function declaraction with parameters and an unrecognized type
+        - function declaration without parameters and an unrecognized type
 
-sort.cm
-three modified prof files that are error
-one that is just a mess.
-
-    1) apostropheWordTest.txt - Tests the apostrophe tag. 
-    2) balancedOPENCLOSETagChecker.txt - Checks for valid and balanced open and close tags.
-    3) balancedTagsRealTags.txt - Extension of 2
-    4) hyphenWords.txt - tests only hyphenated word cases.
-    5) realNumbersTest.txt - ensures that both real and integer numbers are properly tagged.
-    6) secondHyphenWords.txt - tests combinations of hyphens and apostrophes, along with other tests.
-    7) simpleOPENCLOSETagChecker.txt - deprecated test, used prior to irrelevant tag filtering.
-    8) wordsTesterNoNumbers.txt - tests standard words with no numbers included.
-    9) wordsTesterWithNumbers.txt - tests words that include numbers, and makes sure they do not overlap
-        with the numbers regular expression.
-    10) smallerNewsData.txt - test file to compare with the sample.out file
-
-
--Batch Tests-
-
-These test files can be run through the makefile through a batch processing in three ways:
-
-1)  Type 'make test' to run the scanner on all of the test files. A large amount of output is generated,
-    all of which is sent to the console. 
-
-2)  Type 'make testToFile' to run the scanner on all of the test files. A large amount of output is generated,
-    with the output of each test being stored in its corresponding .out file in the testOutput/ directory. 
-
-3)  Type 'make newsdata' to un the scanner on the newsdata.txt file provided by the professor and send the 
-    stdout to testOutput/newsdata.out. This can then be checked manually for consistency.
+   5) 5.cm: This is a modified version of sort.cm that was provided to us for use by the professor.
+      The errors included in this file are as follows:
+        - function declaration with parameters and an unrecognized type
+        - function declaration without parameters and an unrecognized type
+        - variable declaraction without a recognized type
+        - array declaration without a recognized type
+        - function declaration with parameters, without a body
 
 
--Single Tests-
+-Makefile to Run Tests-
 
-If you would like to run a single test and output to the console, the general command to run a test is as follows: 
+These test files can be run through the makefile through using the following commands:
 
-    java Scanner <  testCases/nameOfTestFile.txt
-
-If you would like to run a single test and output to a file, the general command to run a test is as follows:
-
-    java Scanner < testCases/nameOfTestCase.txt > testOutput/nameOfTestCase.out
-
+1)  make test1: runs the first test case
+2)  make test2: runs the second test case
+3)  make test3: runs the third test case
+4)  make test4: runs the fourth test case
+5)  make test5: runs the fifth test case
 
 
 ===========================
 Assumptions and Limitations
 ===========================
 
-1. Testing has been completed using that standard English alphabet, and will 
-not run properly if symbols outside of those alphanumeric characters are given. 
-    -> Punctuation is the default case of this program, which captures anything 
-    that is not recognized by the previous regular expressions. Any non-English
-    alphanumeric characters would be treated as punctuation.
-
-
+1. We assume that the files provided will be in the .cm style, and have reasonable errors. Some
+   error handling has been implemented, but definitely not enough to cover all possible error cases.
+2. We assume that nothing outside of the assigment specification will be provided as input into the
+   program, unless it is a reasonable test case for the scanner/parser.
+3. 
 ===================
 Future Improvements
 ===================
 
-1. Expanding the alphabet to include other language characters would greatly improve the usability
-of this scanner.
-2. The Open tag regular expression is very complicated, and a more simple version is likely. A future 
-improvement would be to find this simpler version and implement it.
-3. Additional SGML test files would likely be useful for finding additional future improvements, 
-especially if these SGML files were from various industries. Currently, the running of this code 
-is based off of unit testing and a correct runtime of a single correct case. Additional correct cases
-could help make this code more robust.
-4. Currently, this scanner skips input that causes an error. A more sophisticated scanner would implement
-some sort of backtracking to see if a possible alternative path could lead to a solution. The scanner 
-could also maintain a list of currently known tags to attempt to correct for typos. This is. however, 
-still a very immature field in scanning, so it would likely be too costly to do this much work for a 
-simple SGML scanner.
+Given additional work hours for this assignment, the following changes would have been implemented:
+
+1. Shit that broke can be fixed.
+2. 
