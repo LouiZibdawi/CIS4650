@@ -12,27 +12,27 @@ Main.class: absyn/*.java parser.java sym.java Lexer.java ShowTreeVisitor.java Sc
 %.class: %.java
 	$(JAVAC) $(CLASSPATH)  $^
 
-Lexer.java: tiny.flex
-	$(JFLEX) tiny.flex
+Lexer.java: cminus.flex
+	$(JFLEX) cminus.flex
 
-parser.java: tiny.cup
+parser.java: cminus.cup
 	#$(CUP) -dump -expect 3 tiny.cup
-	$(CUP) -expect 3 < tiny.cup
+	$(CUP) -expect 3 < cminus.cup
 
 test1:
-	java -classpath ./jars/cup.jar: Main 1.cm
+	java -classpath ./jars/cup.jar: Main input/1.cm
 
 test2:
-	java -classpath ./jars/cup.jar: Main 2.cm
+	java -classpath ./jars/cup.jar: Main input/2.cm
 
 test3:
-	java -classpath ./jars/cup.jar: Main 3.cm
+	java -classpath ./jars/cup.jar: Main input/3.cm
 
 test4:
-	java -classpath ./jars/cup.jar: Main 4.cm
+	java -classpath ./jars/cup.jar: Main input/4.cm
 
 test5:
-	java -classpath ./jars/cup.jar: Main 5.cm
+	java -classpath ./jars/cup.jar: Main input/5.cm
 
 clean:
 	rm -f parser.java Lexer.java sym.java *.class absyn/*.class *~

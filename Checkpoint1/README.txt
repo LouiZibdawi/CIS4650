@@ -87,12 +87,20 @@ Assumptions and Limitations
    error handling has been implemented, but definitely not enough to cover all possible error cases.
 2. We assume that nothing outside of the assigment specification will be provided as input into the
    program, unless it is a reasonable test case for the scanner/parser.
-3. 
+3. This program will run perfectly on a program that is properly formatted.
+4. This program does not handle cases where a variable not declared, but is then used in the program.
+5. The program will not recognize a variable input when it is expecting a number. Rather, it will just
+   crash. This is because we use ParseInt.
 ===================
 Future Improvements
 ===================
 
 Given additional work hours for this assignment, the following changes would have been implemented:
 
-1. Shit that broke can be fixed.
-2. 
+1. Additional error handling could be implemented, given more time. This includes a wider range of 
+   error handling, as well as better handling of all errors when they occur. Some of the unrecoverable
+   errors could be handled in a different way, or could be skipped, or even some basic spelling modifications
+   could be reported, once the symbol table has been set up.
+2. Additional simplification of the program could be completed using associations and combining
+   grammar rules.  
+3. Fixed the fifth limitation listed above by finding a way to create the grammar without needing ParseInt.
