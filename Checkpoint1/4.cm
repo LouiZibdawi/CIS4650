@@ -1,0 +1,27 @@
+/* A program to perform Euclid's 
+   algorithm to compute a gcd */
+
+/*	The errors contained in this test file are 
+	function declaration with parameters and an unrecognized type
+	function declaration without parameters and an unrecognized type
+*/
+
+fire truck(int x, int y) {
+  x = x + y;
+}
+
+bubble gum(void) {
+  test = 2 + 3;
+}
+
+int gcd(int u, int v) {
+  if (v == 0) return u;
+  else return gcd(v, u - u/v*v);
+}
+
+void main(void) {
+  int x; int y;
+  x = input();
+  y = input();
+  output(gcd(x, y));
+}
