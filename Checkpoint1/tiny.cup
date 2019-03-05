@@ -72,7 +72,7 @@ parser code {:
 /* ------------Declaration of Terminals and Non Terminals Section----------- */
 terminal IF, ELSE;
 terminal INT, RETURN, VOID, WHILE;
-terminal EQ, LT, GT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, SEMI, UMINUS;
+terminal EQ, LT, GT, PLUS, MINUS, TIMES, OVER, LPAREN, RPAREN, SEMI; //, UMINUS;
 terminal LTE, GTE, COMPARE, NE, COMMA, SQLEFT, SQRIGHT, SQUIGLEFT, SQUIGRIGHT;
 terminal String ID;
 terminal String NUM;
@@ -88,10 +88,11 @@ non terminal Var var;
 non terminal ExpList arg_list, stmt_list;
 non terminal NameTy type_spec;
 
+precedence right EQ;
+precedence nonassoc LT, GT, LTE, GTE, NE, COMPARE;
 precedence left PLUS, MINUS;
 precedence left TIMES, OVER;
-precedence right UMINUS; // add uminus rules?
-precedence nonassoc EQ, LT, GT, LTE, GTE, NE, COMPARE;
+//precedence right UMINUS; // add uminus rules?
 
 /* ----------------------------Grammar Section-------------------- */
 
@@ -131,7 +132,7 @@ type_spec   ::= INT:i
 			;
 
 fun_dec     ::= type_spec:ts ID:i LPAREN param_list:pl RPAREN comp_stmt:cs
-				{: RESULT = new FunctionDec(tsleft, ts, i, pl, cs); :} // problem here?
+				{: RESULT = new FunctionDec(tsleft, ts, i, pl, cs); :}
 			|   type_spec:ts ID:i LPAREN VOID RPAREN comp_stmt:cs
                 {: RESULT = new FunctionDec(tsleft, ts, i, null, cs); :}
 			;
@@ -186,13 +187,13 @@ stmt_list   ::= stmt_list:sl stmt:s
 			;
 
 stmt        ::= comp_stmt:cs
-				{: RESULT = cs; :} // should this be new CompoundExp?
+				{: RESULT = cs; :}
 			|   expr:e SEMI
 				{: RESULT = e; :}
             |   SEMI:s
                 {: RESULT = new NilExp(sleft); :}
 			|   IF:i LPAREN expr:e RPAREN stmt:s
-				{: RESULT = new IfExp(ileft, e, s, null); :}
+				{: RESULT = new IfExp(ileft, e, s, new NilExp(sleft)); :}
             |   IF:i LPAREN expr:e RPAREN stmt:s1 ELSE stmt:s2
                 {: RESULT = new IfExp(ileft, e, s1, s2); :}
 			|   WHILE:w LPAREN expr:e RPAREN stmt:s
@@ -225,7 +226,7 @@ expr        ::= var:v EQ expr:e
                 {: RESULT = new OpExp(ae1left, ae1, OpExp.TIMES, ae2); :}
             |   expr:ae1 OVER expr:ae2
                 {: RESULT = new OpExp(ae1left, ae1, OpExp.OVER, ae2); :}
-            |   factor:f // huh: correct class?
+            |   factor:f
                 {: RESULT = f; :}
             ;
 

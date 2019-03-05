@@ -92,67 +92,40 @@ comment = \/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\/
 
 //keyword creation
 
-"if"               { System.out.print(yytext());
-                        return symbol(sym.IF); }
-"else"             { System.out.print(yytext());
-						return symbol(sym.ELSE); }
-"int"              { System.out.print(yytext());
-						return symbol(sym.INT); }
-"return"           { System.out.print(yytext());
-						return symbol(sym.RETURN); }
-"void"             { System.out.print(yytext());
-						return symbol(sym.VOID); }
-"while"            { System.out.print(yytext());
-						return symbol(sym.WHILE); }
+"if"               { return symbol(sym.IF); }
+"else"             { return symbol(sym.ELSE); }
+"int"              { return symbol(sym.INT); }
+"return"           { return symbol(sym.RETURN); }
+"void"             { return symbol(sym.VOID); }
+"while"            { return symbol(sym.WHILE); }
 
 // special symbols
 
-"+"                { System.out.print(yytext());
-						return symbol(sym.PLUS); }
-"-"                { System.out.print(yytext());
-						return symbol(sym.MINUS); }
-"*"                { System.out.print(yytext());
-						return symbol(sym.TIMES); }
-"/"                { System.out.print(yytext());
-						return symbol(sym.OVER); }
-"<"                { System.out.print(yytext());
-						return symbol(sym.LT); }
-">"                { System.out.print(yytext());
-						return symbol(sym.GT); }
-"="                { System.out.print(yytext());
-						return symbol(sym.EQ); }
-";"                { System.out.print(yytext());
-						return symbol(sym.SEMI); }
-"("                { System.out.print(yytext());
-						return symbol(sym.LPAREN); }
-")"                { System.out.print(yytext());
-						return symbol(sym.RPAREN); }
-"<="               { System.out.print(yytext());
-						return symbol(sym.LTE); }
-">="               { System.out.print(yytext());
-						return symbol(sym.GTE); }
-"=="               { System.out.print(yytext());
-						return symbol(sym.COMPARE); }
-"!="               { System.out.print(yytext());
-						return symbol(sym.NE); }
-","                { System.out.print(yytext());
-						return symbol(sym.COMMA); }
-"["                { System.out.print(yytext());
-						return symbol(sym.SQLEFT); }
-"]"                { System.out.print(yytext());
-						return symbol(sym.SQRIGHT); }
-"{"                { System.out.print(yytext());
-						return symbol(sym.SQUIGLEFT); }
-"}"                { System.out.print(yytext());
-						return symbol(sym.SQUIGRIGHT); }
+"+"                { return symbol(sym.PLUS); }
+"-"                { return symbol(sym.MINUS); }
+"*"                { return symbol(sym.TIMES); }
+"/"                { return symbol(sym.OVER); }
+"<"                { return symbol(sym.LT); }
+">"                { return symbol(sym.GT); }
+"="                { return symbol(sym.EQ); }
+";"                { return symbol(sym.SEMI); }
+"("                { return symbol(sym.LPAREN); }
+")"                { return symbol(sym.RPAREN); }
+"<="               { return symbol(sym.LTE); }
+">="               { return symbol(sym.GTE); }
+"=="               { return symbol(sym.COMPARE); }
+"!="               { return symbol(sym.NE); }
+","                { return symbol(sym.COMMA); }
+"["                { return symbol(sym.SQLEFT); }
+"]"                { return symbol(sym.SQRIGHT); }
+"{"                { return symbol(sym.SQUIGLEFT); }
+"}"                { return symbol(sym.SQUIGRIGHT); }
 
 //Other token definitions
 
-{numberV2}         { System.out.print(yytext());
-						return symbol(sym.NUM, yytext()); }
-{identifierV2}     { System.out.print(yytext());
-						return symbol(sym.ID, yytext()); }
-{WhiteSpace}+      { /* skip whitespace */ System.out.print(yytext()); }
-{comment}          { System.out.println("COMMENT FOUND, SKIPPING"); /*skip comments*/ }
+{numberV2}         { return symbol(sym.NUM, yytext()); }
+{identifierV2}     { return symbol(sym.ID, yytext()); }
+{WhiteSpace}+      { /* skip whitespace */ }
+{comment}          { /* skip comments */ }
 .                  { System.err.println("ERROR: Unrecognized character \'" + yytext() +"\' on line " + yyline);
                         return symbol(sym.ERROR); }
