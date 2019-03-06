@@ -1,4 +1,4 @@
-Joshua Lange
+Joshua Lange and Reiner Liman
 CIS*4650
 Checkpoint #1
 Date of Last Modification: Monday, March 4th, 2019
