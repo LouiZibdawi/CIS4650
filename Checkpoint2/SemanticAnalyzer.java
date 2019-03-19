@@ -120,32 +120,65 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
     public void visit ( FunctionDec exp, int level){ // done
         SymItem sym = new SymItem(exp.func, exp.result.typ, level, "");
+        //TODO Add in alternate flow for function prototype. Check body value for null to know if it's a proto.
+        if (exp.body == null){
+            System.out.println("Function Prototype " + exp.func + ": ");
+            sym.level = -1; //Set the level to -1 to identify it as a function prototype
+            this.symTable.get(0).put(exp.func,sym);
+            VarDecList parms = exp.params;
+            tempParams = ""; // clear before using
+            while (parms != null) {
+                parms.head.accept(this, level);
+                parms = parms.tail;
+            }
+        }else{ //NEW: moved old functionality to an else block, so it only runs if it is a function definition
+            indent(level);
 
-        indent(level);
-        System.out.println("Entering the scope for function " + exp.func + ": ");
-        this.symTable.addFirst(new HashMap<String, SymItem>());
-        level++;
+            System.out.println("Entering the scope for function " + exp.func + ": ");
+            this.symTable.addFirst(new HashMap<String, SymItem>());
+            level++;
 
-        VarDecList parms = exp.params;
-        tempParams = ""; // clear before using
-        while (parms != null) {
-            parms.head.accept(this, level);
-            parms = parms.tail;
+            VarDecList parms = exp.params;
+            tempParams = ""; // clear before using
+            while (parms != null) {
+                parms.head.accept(this, level);
+                parms = parms.tail;
+            }
+            sym.params = tempParams;
+            tempParams = ""; // clear after storing in symbol item
+            if (!this.symTable.get(1).containsKey(exp.func)) {
+                this.symTable.get(1).put(exp.func, sym);
+            }
+            //Prototype entries should be located and then updated if a function definition is found. This
+            // way, there will always be only one prototype to one definition.
+            else {
+                //Adapted from https://thispointer.com/java-how-to-get-keys-by-a-value-in-hashmap-search-by-value-in-map/
+                int i=0;
+                int foundValidPrototype = 0;
+                for (Map.Entry<String,SymItem> entry: this.symTable.get(1).entrySet()){
+                    if (entry.getKey().equals(exp.func)) {
+                        if(entry.getValue().level == -1){
+                            SymItem tempSym = new SymItem(exp.func, exp.result.typ, 0, "");
+                            this.symTable.get(1).put(exp.func,tempSym);
+                            foundValidPrototype=1;
+                        }
+                    }
+
+                }
+                if (foundValidPrototype == 0){
+                    System.err.printf("Error: %s has already been declared\n", exp.func);
+                }
+
+            }
+            exp.body.accept(this, level);
+
+            printMap(this.symTable.get(0).entrySet().iterator(), level);
+            level--;
+            this.symTable.removeFirst();
+            indent(level);
+            System.out.println("Leaving the function scope");
+
         }
-        sym.params = tempParams;
-        tempParams = ""; // clear after storing in symbol item
-        if (!this.symTable.get(1).containsKey(exp.func))
-            this.symTable.get(1).put(exp.func, sym);
-        else
-            System.err.printf("Error: %s has already been declared\n", exp.func);
-
-        exp.body.accept(this, level);
-
-        printMap(this.symTable.get(0).entrySet().iterator(), level);
-        level--;
-        this.symTable.removeFirst();
-        indent(level);
-        System.out.println("Leaving the function scope");
     }
 
     public void visit ( SimpleDec exp, int level){ // done

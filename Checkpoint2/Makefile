@@ -7,7 +7,7 @@ CUP=$(JAVA) $(CLASSPATH) java_cup.Main
 
 all: CM.class
 
-CM.class: absyn/*.java parser.java sym.java Lexer.java SemanticAnalyzer.java ShowTreeVisitor.java Scanner.java CM.java
+CM.class: absyn/*.java parser.java sym.java SymItem.java Lexer.java SemanticAnalyzer.java ShowTreeVisitor.java Scanner.java CM.java
 
 %.class: %.java
 	$(JAVAC) $(CLASSPATH)  $^
@@ -33,6 +33,9 @@ test4:
 
 test5:
 	java -classpath ./jars/cup.jar: CM input/5.cm
+
+C2Test1:
+	java -classpath ./jars/cup.jar: CM input/C2-1.cm
 
 clean:
 	rm -f parser.java Lexer.java sym.java *.class absyn/*.class *~
