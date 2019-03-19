@@ -15,22 +15,30 @@ import java.io.*;
 import absyn.*;
    
 class CM {
-  public final static boolean SHOW_TREE = true;
-  static public void main(String argv[]) {    
+    public static final boolean SHOW_TREE = true;
+    public static final boolean SHOW_TABLE = true;
+    public static void main(String argv[]) {
     /* Start the parser */
-    try {
-      parser p = new parser(new Lexer(new FileReader(argv[0])));
-      Absyn result = (Absyn)(p.parse().value);      
-      if (SHOW_TREE) {
-         System.out.println("The abstract syntax tree is:");
-         ShowTreeVisitor visitor = new ShowTreeVisitor();
-         result.accept(visitor, 0); 
-      }
-    } catch (Exception e) {
-      /* do cleanup here -- possibly rethrow e */
-      e.printStackTrace();
+        try {
+            parser p = new parser(new Lexer(new FileReader(argv[0])));
+            Absyn result = (Absyn)(p.parse().value);
+            if (SHOW_TREE) {
+                System.out.println("\nThe abstract syntax tree is:");
+                ShowTreeVisitor visitor = new ShowTreeVisitor();
+                result.accept(visitor, 0);
+            }
+            if (SHOW_TABLE) {
+                System.out.println("\nEntering the global scope: ");
+                SemanticAnalyzer sAnal = new SemanticAnalyzer();
+                result.accept(sAnal, 1);
+                sAnal.printMap(sAnal.symTable.get(0).entrySet().iterator(), 1);
+                System.out.println("Leaving the global scope");
+            }
+        } catch (Exception e) {
+            /* do cleanup here -- possibly rethrow e */
+            e.printStackTrace();
+        }
     }
-  }
 }
 
 
