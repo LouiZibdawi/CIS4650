@@ -105,7 +105,7 @@ public class ShowTreeVisitor implements AbsynVisitor {
             parms.head.accept(this, level);
             parms = parms.tail;
         }
-        if (exp.body != null){ //New if check to not accept a body if it is null. Handles function prototypes
+        if (exp.body != null){ // check if body is null: handles function prototypes
             exp.body.accept(this, level);
         }
     }

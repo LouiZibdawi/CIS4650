@@ -2,6 +2,10 @@ import java.io.*;
 import java.util.*;
 import absyn.*;
 
+// TODO: use getFirst() instead of get(0)?
+// TODO: matching function params when calling
+// TODO: matching expression types (for operations and such)
+
 public class SemanticAnalyzer implements AbsynVisitor {
     final static int SPACES = 4;
     public static LinkedList<HashMap<String, SymItem>> symTable;
@@ -38,7 +42,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
         exp.test.accept( this, level );
         exp.thenpart.accept( this, level );
 
-        printMap(this.symTable.get(0).entrySet().iterator(), level);
+        printMap(this.symTable.getFirst().entrySet().iterator(), level);
         level--;
         this.symTable.removeFirst();
         indent(level);
@@ -52,7 +56,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
             exp.elsepart.accept(this, level);
 
-            printMap(this.symTable.get(0).entrySet().iterator(), level);
+            printMap(this.symTable.getFirst().entrySet().iterator(), level);
             level--;
             this.symTable.removeFirst();
             indent(level);
@@ -73,13 +77,17 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
     }
 
-    public void visit( CallExp exp, int level ) { // TODO: check before using to see if it exists, see discord notes for other changes
-//        level++;
-        ExpList args = exp.args;
-        while (args != null) {
-            args.head.accept(this, level);
-            args = args.tail;
-        }
+    public void visit( CallExp exp, int level ) { // done
+        if (this.symTable.getLast().containsKey(exp.func)) {
+            if (((SymItem) this.symTable.getLast().get(exp.func)).level == -1)
+                ((SymItem) this.symTable.getLast().get(exp.func)).level = -2; // mark as used prototype
+            ExpList args = exp.args;
+            while (args != null) {
+                args.head.accept(this, level);
+                args = args.tail;
+            }
+        } else
+            System.err.printf("Error: Undeclared function: %s\n", exp.func);
     }
 
     public void visit( WhileExp exp, int level) { // done
@@ -91,7 +99,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
         exp.test.accept(this, level);
         exp.body.accept(this, level);
 
-        printMap(this.symTable.get(0).entrySet().iterator(), level);
+        printMap(this.symTable.getFirst().entrySet().iterator(), level);
         level--;
         this.symTable.removeFirst();
         indent(level);
@@ -120,22 +128,9 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
     public void visit ( FunctionDec exp, int level){ // done
         SymItem sym = new SymItem(exp.func, exp.result.typ, level, "");
-        //TODO Add in alternate flow for function prototype. Check body value for null to know if it's a proto.
-        if (exp.body == null){
-            System.out.println("Function Prototype " + exp.func + ": ");
-            sym.level = -1; //Set the level to -1 to identify it as a function prototype
-            this.symTable.get(0).put(exp.func,sym);
-            VarDecList parms = exp.params;
-            tempParams = ""; // clear before using
-            while (parms != null) {
-                parms.head.accept(this, level);
-                parms = parms.tail;
-            }
-        }else{ //NEW: moved old functionality to an else block, so it only runs if it is a function definition
-            indent(level);
-
-            System.out.println("Entering the scope for function " + exp.func + ": ");
-            this.symTable.addFirst(new HashMap<String, SymItem>());
+        if (exp.body == null) { // Check if it is a prototype
+            sym.level = -1; // Set the level to -1 to identify it as a function prototype
+            this.symTable.addFirst(new HashMap<String, SymItem>()); // temp storage for params
             level++;
 
             VarDecList parms = exp.params;
@@ -144,47 +139,45 @@ public class SemanticAnalyzer implements AbsynVisitor {
                 parms.head.accept(this, level);
                 parms = parms.tail;
             }
-            sym.params = tempParams;
-            tempParams = ""; // clear after storing in symbol item
-            if (!this.symTable.get(1).containsKey(exp.func)) {
-                this.symTable.get(1).put(exp.func, sym);
-            }
-            //Prototype entries should be located and then updated if a function definition is found. This
-            // way, there will always be only one prototype to one definition.
-            else {
-                //Adapted from https://thispointer.com/java-how-to-get-keys-by-a-value-in-hashmap-search-by-value-in-map/
-                int i=0;
-                int foundValidPrototype = 0;
-                for (Map.Entry<String,SymItem> entry: this.symTable.get(1).entrySet()){
-                    if (entry.getKey().equals(exp.func)) {
-                        if(entry.getValue().level == -1){
-                            SymItem tempSym = new SymItem(exp.func, exp.result.typ, 0, "");
-                            this.symTable.get(1).put(exp.func,tempSym);
-                            foundValidPrototype=1;
-                        }
-                    }
+            sym.params += tempParams;
 
-                }
-                if (foundValidPrototype == 0){
-                    System.err.printf("Error: %s has already been declared\n", exp.func);
-                }
-
-            }
-            exp.body.accept(this, level);
-
-            printMap(this.symTable.get(0).entrySet().iterator(), level);
             level--;
-            this.symTable.removeFirst();
-            indent(level);
-            System.out.println("Leaving the function scope");
+            this.symTable.removeFirst(); // delete temp storage; don't need to keep
+            if (!this.symTable.getLast().containsKey(exp.func))
+                this.symTable.getLast().put(exp.func, sym);
+            else
+                System.err.printf("Error: %s has already been declared\n", exp.func);
+        } else { // if it is a function definition
+            if (!this.symTable.getLast().containsKey(exp.func) || (this.symTable.getLast().containsKey(exp.func) && ((SymItem) this.symTable.getLast().get(exp.func)).level == -1)) {
+                indent(level);
+                System.out.println("Entering the scope for function " + exp.func + ": ");
+                this.symTable.addFirst(new HashMap<String, SymItem>());
+                level++;
 
+                VarDecList parms = exp.params;
+                tempParams = ""; // clear before using
+                while (parms != null) {
+                    parms.head.accept(this, level);
+                    parms = parms.tail;
+                }
+                sym.params = tempParams;
+                this.symTable.getLast().put(exp.func, sym);
+
+                exp.body.accept(this, level);
+                printMap(this.symTable.getFirst().entrySet().iterator(), level);
+                level--;
+                this.symTable.removeFirst();
+                indent(level);
+                System.out.println("Leaving the function scope");
+            } else
+                System.err.printf("Error: %s has already been declared\n", exp.func);
         }
     }
 
     public void visit ( SimpleDec exp, int level){ // done
         SymItem sym = new SymItem(exp.name, exp.typ.typ, level, "");
-        if (!this.symTable.get(0).containsKey(exp.name)) {
-            this.symTable.get(0).put(exp.name, sym);
+        if (!this.symTable.getFirst().containsKey(exp.name)) {
+            this.symTable.getFirst().put(exp.name, sym);
             tempParams += exp.typ.typ + " ";
         } else
             System.err.printf("Error: %s has already been declared\n", exp.name);
@@ -197,8 +190,8 @@ public class SemanticAnalyzer implements AbsynVisitor {
             name += exp.size.value + "";
         name += "]";
         SymItem sym = new SymItem(name, exp.typ.typ, level, "");
-        if (!this.symTable.get(0).containsKey(exp.name)) {
-            this.symTable.get(0).put(exp.name, sym);
+        if (!this.symTable.getFirst().containsKey(exp.name)) {
+            this.symTable.getFirst().put(exp.name, sym);
             tempParams += exp.typ.typ + " ";
         } else
             System.err.printf("Error: %s has already been declared\n", exp.name);
@@ -219,16 +212,15 @@ public class SemanticAnalyzer implements AbsynVisitor {
     }
 
     public void visit( IndexVar exp, int level ) { // done
-//        level++;
         if (symExists(exp.name))
             exp.index.accept(this, level);
         else
-            System.err.printf("Error: Undefined variable %s\n", exp.name);
+            System.err.printf("Error: Undefined variable: %s\n", exp.name);
     }
 
     public void visit( SimpleVar exp, int level ) { // done
         if (!symExists(exp.name))
-            System.err.printf("Error: Undefined variable %s\n", exp.name);
+            System.err.printf("Error: Undefined variable: %s\n", exp.name);
     }
 
     public void visit( NameTy exp, int level ) {
@@ -261,6 +253,16 @@ public class SemanticAnalyzer implements AbsynVisitor {
                 System.out.println("int");
             else if (symbol.type == 1)
                 System.out.println("void");
+        }
+    }
+
+    public void printUndefined(Iterator i) {
+        while (i.hasNext()) {
+            SymItem symbol = (SymItem) ((Map.Entry) i.next()).getValue();
+            if (symbol.level == -1)
+                System.err.printf("Error: Undefined function prototype: %s\n", symbol.name);
+            else if (symbol.level == -2)
+                System.err.printf("Error: Used but undefined function prototype: %s\n", symbol.name);
         }
     }
 

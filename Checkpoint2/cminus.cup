@@ -142,19 +142,23 @@ type_spec   ::= INT:i
 			;
 
 fun_dec     ::= type_spec:ts ID:i LPAREN param_list:pl RPAREN comp_stmt:cs
-				{: RESULT = new FunctionDec(tsleft, ts, i, pl, cs); :}
+				{:  RESULT = new FunctionDec(tsleft, ts, i, pl, cs); :}
 			|   type_spec:ts ID:i LPAREN VOID RPAREN comp_stmt:cs
-                {: RESULT = new FunctionDec(tsleft, ts, i, null, cs); :}
-            |   type_spec:ts ID:i LPAREN param_list:pl RPAREN SEMI //New addition, fully defined function prototype
-              	{: RESULT = new FunctionDec(tsleft, ts, i, pl, null); :}
-            |   type_spec:ts ID:i LPAREN VOID RPAREN SEMI //New addition, function prototype with no params
-                {: RESULT = new FunctionDec(tsleft, ts, i, null, null); :}
+                {:  RESULT = new FunctionDec(tsleft, ts, i, null, cs); :}
+            |   type_spec:ts ID:i LPAREN param_list:pl RPAREN SEMI // fully defined function prototype
+              	{:  RESULT = new FunctionDec(tsleft, ts, i, pl, null); :}
+            |   type_spec:ts ID:i LPAREN VOID RPAREN SEMI // function prototype with no params
+                {:  RESULT = new FunctionDec(tsleft, ts, i, null, null); :}
             |   type_spec:ts ID:i LPAREN param_list:pl RPAREN error:e
                 {:  report_fatal_error("Invalid syntax", e); :}
             |   type_spec:ts ID:i LPAREN VOID RPAREN error:e
-                {: report_fatal_error("Invalid syntax", e); :}
-            |   type_spec:ts ID: i
-
+                {:  report_fatal_error("Invalid syntax", e); :}
+            |   error:e ID:i LPAREN param_list:pl RPAREN SEMI
+				{:  report_error("Invalid syntax", e);
+				    RESULT = new FunctionDec(eleft, new NameTy(eleft, NameTy.INT), i, pl, null); :}
+			|   error:e ID:i LPAREN VOID RPAREN SEMI
+				{:  report_error("Invalid syntax", e);
+					RESULT = new FunctionDec(eleft, new NameTy(eleft, NameTy.INT), i, null, null); :}
             |   error:e ID:i LPAREN param_list:pl RPAREN comp_stmt:cs
                 {:  report_error("Invalid syntax", e);
                     RESULT = new FunctionDec(eleft, new NameTy(eleft, NameTy.INT), i, pl, cs); :}

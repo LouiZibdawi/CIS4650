@@ -31,8 +31,9 @@ class CM {
                 System.out.println("\nEntering the global scope: ");
                 SemanticAnalyzer sAnal = new SemanticAnalyzer();
                 result.accept(sAnal, 1);
-                sAnal.printMap(sAnal.symTable.get(0).entrySet().iterator(), 1);
+                sAnal.printMap(sAnal.symTable.getLast().entrySet().iterator(), 1);
                 System.out.println("Leaving the global scope");
+                sAnal.printUndefined(sAnal.symTable.getLast().entrySet().iterator());
             }
         } catch (Exception e) {
             /* do cleanup here -- possibly rethrow e */
