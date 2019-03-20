@@ -2,7 +2,6 @@ import java.io.*;
 import java.util.*;
 import absyn.*;
 
-// *TODO: check for int in array index
 // TODO x2: check both sides of assignment or operation is an int
 // TODO: if test expr should be of type int, if function, function type should be int
 // -TODO: matching function params when calling
@@ -116,27 +115,20 @@ public class SemanticAnalyzer implements AbsynVisitor {
             if (this.symTable.getLast().get(currFunc).type == 0)
                 System.err.printf("Error: mismatched return type with function type\n");
         } else if (exp.exp != null) {
+            String var = "";
             if (exp.exp instanceof IntExp) {
                 if (this.symTable.getLast().get(currFunc).type == 1)
                     System.err.printf("Error: mismatched return type with function type\n");
             } else if (exp.exp instanceof VarExp) {
-                if (((VarExp) exp.exp).name instanceof SimpleVar) {
-                    String var = ((SimpleVar) ((VarExp) exp.exp).name).name;
-                    if (symExists(var)) {
-                        if (this.symTable.getLast().get(currFunc).type != findType(var))
-                            System.err.printf("Error: mismatched return type with function type\n");
-                    } else
-                        System.err.printf("Error: Undeclared return variable: %s\n", var);
-                } else if (((VarExp) exp.exp).name instanceof IndexVar) {
-                    String var = ((IndexVar) ((VarExp) exp.exp).name).name;
-                    if (symExists(var)) {
-                        if (this.symTable.getLast().get(currFunc).type != findType(var))
-                            System.err.printf("Error: mismatched return type with function type\n");
-                    } else
-                        System.err.printf("Error: Undeclared return array: %s\n", var);
-                }
+                if (((VarExp) exp.exp).name instanceof SimpleVar) var = ((SimpleVar) ((VarExp) exp.exp).name).name;
+                else if (((VarExp) exp.exp).name instanceof IndexVar) var = ((IndexVar) ((VarExp) exp.exp).name).name;
+                if (symExists(var)) {
+                    if (this.symTable.getLast().get(currFunc).type != findType(var))
+                        System.err.printf("Error: mismatched return type with function type\n");
+                } else
+                    System.err.printf("Error: Undeclared return variable: %s\n", var);
             } else if (exp.exp instanceof CallExp) {
-                String var = ((CallExp) exp.exp).func;
+                var = ((CallExp) exp.exp).func;
                 if (symExists(var)) {
                     if (this.symTable.getLast().get(currFunc).type != findType(var))
                         System.err.printf("Error: mismatched return type with function type\n");
@@ -220,7 +212,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
             System.err.printf("Error: %s has already been declared\n", exp.name);
     }
 
-    public void visit(ArrayDec exp, int level){ // index could be IntExp, SimpleVar, CallExp, nothing, or OpExp?
+    public void visit(ArrayDec exp, int level){ // done
         String name = "";
         name += exp.name + "[";
         if (exp.size != null)
@@ -248,16 +240,33 @@ public class SemanticAnalyzer implements AbsynVisitor {
         }
     }
 
-    public void visit(IndexVar exp, int level) { // index could be IntExp, SimpleVar (CallExp or OpExp?)
-        if (symExists(exp.name))
-            exp.index.accept(this, level);
-        else
-            System.err.printf("Error: Undefined variable: %s\n", exp.name);
+    public void visit(IndexVar exp, int level) {
+        if (symExists(exp.name)) {
+            String var = "";
+            if (exp.index instanceof VarExp) {
+                if (((VarExp) exp.index).name instanceof SimpleVar) var = ((SimpleVar) ((VarExp) exp.index).name).name;
+                else if (((VarExp) exp.index).name instanceof IndexVar) var = ((IndexVar) ((VarExp) exp.index).name).name;
+                if (symExists(var)) {
+                    if (findType(var) != 0)
+                        System.err.printf("Error: Index value is not an integer at line %d column %d\n", exp.index.row, exp.index.col);
+                } else
+                    System.err.printf("Error: Undeclared index variable: %s at line %d column %d\n", var, exp.index.row, exp.index.col);
+            } else if (exp.index instanceof CallExp) {
+                var = ((CallExp) exp.index).func;
+                if (symExists(var)) {
+                    if (findType(var) != 0)
+                        System.err.printf("Error: Index value is not an integer at line %d column %d\n", exp.index.row, exp.index.col);
+                } else
+                    System.err.printf("Error: Undeclared function: %s used at line %d column %d\n", var, exp.index.row, exp.index.col);
+            } else
+                exp.index.accept(this, level);
+        } else
+            System.err.printf("Error: Undeclared array variable: %s at line %d column %d\n", exp.name, exp.row, exp.col);
     }
 
     public void visit(SimpleVar exp, int level) { // done
         if (!symExists(exp.name))
-            System.err.printf("Error: Undefined variable: %s\n", exp.name);
+            System.err.printf("Error: Undeclared variable: %s\n", exp.name);
     }
 
     public void visit(NameTy exp, int level) {
