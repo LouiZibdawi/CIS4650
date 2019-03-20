@@ -2,38 +2,43 @@ import java.io.*;
 import java.util.*;
 import absyn.*;
 
-// TODO: use getFirst() instead of get(0)?
-// TODO: matching function params when calling
-// TODO: matching expression types (for operations and such)
+// *TODO: check for int in array index
+// TODO x2: check both sides of assignment or operation is an int
+// TODO: if test expr should be of type int, if function, function type should be int
+// -TODO: matching function params when calling
+// -TODO: need symExists check inside of simple/index var?
+
+// 0 for int, 1 for void
 
 public class SemanticAnalyzer implements AbsynVisitor {
     final static int SPACES = 4;
     public static LinkedList<HashMap<String, SymItem>> symTable;
     private static String tempParams = "";
+    private static String currFunc = "";
 
     public SemanticAnalyzer() { // done
         this.symTable = new LinkedList<HashMap<String, SymItem>>();
         this.symTable.add(new HashMap<String, SymItem>());
     }
 
-    private void indent( int level ) { // done
+    private void indent(int level) { // done
         for( int i = 0; i < level * SPACES; i++ ) System.out.print( " " );
     }
 
-    public void visit( ExpList expList, int level ) { // done
+    public void visit(ExpList expList, int level) { // done
         while( expList != null ) {
             expList.head.accept( this, level );
             expList = expList.tail;
         }
     }
 
-    public void visit( AssignExp exp, int level ) {
+    public void visit(AssignExp exp, int level) {
 //        level++;
         exp.lhs.accept( this, level );
         exp.rhs.accept( this, level );
     }
 
-    public void visit( IfExp exp, int level ) { // done
+    public void visit(IfExp exp, int level) { // done
         indent(level);
         System.out.println("Entering a new if block: ");
         this.symTable.addFirst(new HashMap<String, SymItem>());
@@ -64,20 +69,20 @@ public class SemanticAnalyzer implements AbsynVisitor {
         }
     }
 
-    public void visit( IntExp exp, int level ) {
+    public void visit(IntExp exp, int level) {
 
     }
 
-    public void visit( VarExp exp, int level ) {
+    public void visit(VarExp exp, int level) {
 //        level++;
         exp.name.accept(this, level);
     }
 
-    public void visit( NilExp exp, int level ) {
+    public void visit(NilExp exp, int level) {
 
     }
 
-    public void visit( CallExp exp, int level ) { // done
+    public void visit(CallExp exp, int level) { // done
         if (this.symTable.getLast().containsKey(exp.func)) {
             if (((SymItem) this.symTable.getLast().get(exp.func)).level == -1)
                 ((SymItem) this.symTable.getLast().get(exp.func)).level = -2; // mark as used prototype
@@ -90,7 +95,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
             System.err.printf("Error: Undeclared function: %s\n", exp.func);
     }
 
-    public void visit( WhileExp exp, int level) { // done
+    public void visit(WhileExp exp, int level) { // done
         indent(level);
         System.out.println("Entering a new while block: ");
         this.symTable.addFirst(new HashMap<String, SymItem>());
@@ -106,13 +111,43 @@ public class SemanticAnalyzer implements AbsynVisitor {
         System.out.println("Leaving the while block");
     }
 
-    public void visit( ReturnExp exp, int level) {
-//        level++;
-        if (exp.exp != null)
-            exp.exp.accept(this, level);
+    public void visit(ReturnExp exp, int level) { // done
+        if (exp.exp == null) {
+            if (this.symTable.getLast().get(currFunc).type == 0)
+                System.err.printf("Error: mismatched return type with function type\n");
+        } else if (exp.exp != null) {
+            if (exp.exp instanceof IntExp) {
+                if (this.symTable.getLast().get(currFunc).type == 1)
+                    System.err.printf("Error: mismatched return type with function type\n");
+            } else if (exp.exp instanceof VarExp) {
+                if (((VarExp) exp.exp).name instanceof SimpleVar) {
+                    String var = ((SimpleVar) ((VarExp) exp.exp).name).name;
+                    if (symExists(var)) {
+                        if (this.symTable.getLast().get(currFunc).type != findType(var))
+                            System.err.printf("Error: mismatched return type with function type\n");
+                    } else
+                        System.err.printf("Error: Undeclared return variable: %s\n", var);
+                } else if (((VarExp) exp.exp).name instanceof IndexVar) {
+                    String var = ((IndexVar) ((VarExp) exp.exp).name).name;
+                    if (symExists(var)) {
+                        if (this.symTable.getLast().get(currFunc).type != findType(var))
+                            System.err.printf("Error: mismatched return type with function type\n");
+                    } else
+                        System.err.printf("Error: Undeclared return array: %s\n", var);
+                }
+            } else if (exp.exp instanceof CallExp) {
+                String var = ((CallExp) exp.exp).func;
+                if (symExists(var)) {
+                    if (this.symTable.getLast().get(currFunc).type != findType(var))
+                        System.err.printf("Error: mismatched return type with function type\n");
+                } else
+                    System.err.printf("Error: Undeclared return function: %s\n", var);
+            } else
+                exp.exp.accept(this, level);
+        }
     }
 
-    public void visit ( CompoundExp exp, int level){
+    public void visit(CompoundExp exp, int level){
 //        level++;
         VarDecList decs = exp.decs;
         while (decs != null) {
@@ -126,7 +161,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
         }
     }
 
-    public void visit ( FunctionDec exp, int level){ // done
+    public void visit(FunctionDec exp, int level){ // done
         SymItem sym = new SymItem(exp.func, exp.result.typ, level, "");
         if (exp.body == null) { // Check if it is a prototype
             sym.level = -1; // Set the level to -1 to identify it as a function prototype
@@ -151,6 +186,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
             if (!this.symTable.getLast().containsKey(exp.func) || (this.symTable.getLast().containsKey(exp.func) && ((SymItem) this.symTable.getLast().get(exp.func)).level == -1)) {
                 indent(level);
                 System.out.println("Entering the scope for function " + exp.func + ": ");
+                currFunc = exp.func;
                 this.symTable.addFirst(new HashMap<String, SymItem>());
                 level++;
 
@@ -169,12 +205,13 @@ public class SemanticAnalyzer implements AbsynVisitor {
                 this.symTable.removeFirst();
                 indent(level);
                 System.out.println("Leaving the function scope");
+                currFunc = "";
             } else
                 System.err.printf("Error: %s has already been declared\n", exp.func);
         }
     }
 
-    public void visit ( SimpleDec exp, int level){ // done
+    public void visit(SimpleDec exp, int level){ // done
         SymItem sym = new SymItem(exp.name, exp.typ.typ, level, "");
         if (!this.symTable.getFirst().containsKey(exp.name)) {
             this.symTable.getFirst().put(exp.name, sym);
@@ -183,7 +220,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
             System.err.printf("Error: %s has already been declared\n", exp.name);
     }
 
-    public void visit ( ArrayDec exp, int level){ // done
+    public void visit(ArrayDec exp, int level){ // index could be IntExp, SimpleVar, CallExp, nothing, or OpExp?
         String name = "";
         name += exp.name + "[";
         if (exp.size != null)
@@ -197,37 +234,37 @@ public class SemanticAnalyzer implements AbsynVisitor {
             System.err.printf("Error: %s has already been declared\n", exp.name);
     }
 
-    public void visit( DecList expList, int level ) { // done
+    public void visit(DecList expList, int level) { // done
         while( expList != null ) {
             expList.head.accept( this, level );
             expList = expList.tail;
         }
     }
 
-    public void visit( VarDecList expList, int level ) { // done
+    public void visit(VarDecList expList, int level) { // done
         while( expList != null ) {
             expList.head.accept( this, level );
             expList = expList.tail;
         }
     }
 
-    public void visit( IndexVar exp, int level ) { // done
+    public void visit(IndexVar exp, int level) { // index could be IntExp, SimpleVar (CallExp or OpExp?)
         if (symExists(exp.name))
             exp.index.accept(this, level);
         else
             System.err.printf("Error: Undefined variable: %s\n", exp.name);
     }
 
-    public void visit( SimpleVar exp, int level ) { // done
+    public void visit(SimpleVar exp, int level) { // done
         if (!symExists(exp.name))
             System.err.printf("Error: Undefined variable: %s\n", exp.name);
     }
 
-    public void visit( NameTy exp, int level ) {
+    public void visit(NameTy exp, int level) {
 
     }
 
-    public void visit( OpExp exp, int level ) {
+    public void visit(OpExp exp, int level) {
 //        level++;
         exp.left.accept( this, level );
         exp.right.accept( this, level );
@@ -274,5 +311,15 @@ public class SemanticAnalyzer implements AbsynVisitor {
             }
         }
         return false;
+    }
+
+    public int findType(String name) {
+        if (this.symTable.size() != 0) {
+            for (int i = 0; i < this.symTable.size(); i++) {
+                if (this.symTable.get(i).containsKey(name))
+                    return ((SymItem) this.symTable.get(i).get(name)).type;
+            }
+        }
+        return -1;
     }
 }
