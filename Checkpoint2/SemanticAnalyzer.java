@@ -35,6 +35,54 @@ public class SemanticAnalyzer implements AbsynVisitor {
 //        level++;
         exp.lhs.accept( this, level );
         exp.rhs.accept( this, level );
+        int lshType = -1;
+        int rhsType = -1;
+        SimpleVar tempLhs = (SimpleVar) exp.lhs;
+        // TODO check if left exists in the symTable
+        // TODO check if right exists in the symTable as a CallExp, IntExp, and VarExp
+        // TODO set up the recursion into the OpExp, and ensure they're all integers
+        if (symExists(tempLhs.name)){
+            System.out.println("Name valid in the left hand side");
+        }else{
+            System.out.println("ERROR WOWOWOW1");
+        }
+        if (exp.rhs instanceof IntExp ){
+
+        }else{
+
+        }
+        //SV && VE ; check both
+        //SV && CE ; check SV for type, CE for return expression value
+        //IV && VE ; check both
+        //IV && CE ; check IV type, CE for return expression value
+        //SV && IE ; just check left for int
+        //IV && IE ; just check left for int
+
+
+        //lhsType = checkRecursiveType(tempLhs);
+        if (exp.rhs instanceof  VarExp) {
+            VarExp tempRhs = (VarExp) exp.rhs;
+            //rhsType = checkRecursiveType(tempRhs);
+            // check the type of SimpleVar and the type of VarExp
+        }else if (exp.rhs instanceof  CallExp){
+            CallExp tempRhs = (CallExp) exp.rhs;
+            //rhsType = checkRecursiveType(tempRhs);
+            // check the type of SimpleVar and the return type of CallExp
+        }else {
+            IntExp tempRhs = (IntExp) exp.rhs;
+            //rhsType = checkRecursiveType(tempRhs);
+            // assume for the last two cases, the right side is an IntExp, only check the right side.
+            // Since the both Var children have a name type, just blindly typecast to SimpleVar???
+        }
+        if (lhsType != rhsType){
+            //generate error
+        }
+
+        // TODO check if the left type in the symTable matches the right type in the symTable. Cycle through all of the
+        // depth level. 0 is int and 1 is void; placeholder function is checkRecursiveType.
+
+
+
     }
 
     public void visit(IfExp exp, int level) { // done
@@ -275,6 +323,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
     public void visit(OpExp exp, int level) {
 //        level++;
+
         exp.left.accept( this, level );
         exp.right.accept( this, level );
     }
