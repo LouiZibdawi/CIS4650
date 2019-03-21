@@ -15,7 +15,7 @@ import java.io.*;
 import absyn.*;
    
 class CM {
-    public static final boolean SHOW_TREE = true;
+    public static final boolean SHOW_TREE = false;
     public static final boolean SHOW_TABLE = true;
     public static void main(String argv[]) {
     /* Start the parser */
