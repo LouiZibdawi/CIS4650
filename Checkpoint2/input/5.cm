@@ -2,25 +2,26 @@
    on a 10 element array */
 
 /* The errors contained in this test file are the errors from the previous files (2.cm, 3.cm, 4.cm)
-    function declaration with parameters and an unrecognized type
-    function declaration without parameters and an unrecognized type
-    variable declaration without a recognized type
-    array declaration without a recognized type
-    function declaration with parameters without a body
+    undefined variable and function reference
+    non-integer array index
+    already declared variable
+    return and function calls are of type int or have different types
+    test expressions are not of type int
+    an operation with a non-integer value on the right hand side
+    an unused function prototype
+    a used function ptototype
+    an assignment with a non-integer value on the right hand side
 */
 
 int x[10];
 
-fire truck(int x, int y) {
-  x = x + y;
-}
+void foo(void);
+void bar(void);
 
-bubble gum(void) {
-  test = 2 + 3;
-}
+void sort(int a[], int low, int high);
 
 int minloc(int a[], int low, int high) {
-  int i; int x; int k; double y; float z[9];
+  int i; int x; int k;
   k = low;
   x = a[low];
   i = low + 1;
@@ -31,37 +32,38 @@ int minloc(int a[], int low, int high) {
     }
     i = i + 1;
   } 
-  return k;
+  return sort(a, low, high);
 }
 
 void sort(int a[], int low, int high) {
-  int i; int k;
+  int i; int k; void test;
+  int k;
   i = low;
   while (i < high - 1) {
     int t;
     k = minloc(a, i, high);
     t = a[k];
-    a[k] = a[i];
-    a[i] = t;
+    a[k] = a[test];
+    a[i] = oops;
     i = i + 1;
   }
 }
 
 void main(void) {
-  int i;
+  int i; int p; void v;
   i = 0;
-  while (i < 10) {
-    x[i] = input();
+  while (v) {
+    x[i] = 3;
     i = i + 1;
   }
 
-  sort(x, 0, 10);
+  p = sort(x, 0, 10);
+  foo();
 
   i = 0;
-  while (i < 10) {
+  p = v;
+  while (i < v) {
     output(x[i]);
     i = i + 1;
   }
 }
-
-int test1(int x,int y)

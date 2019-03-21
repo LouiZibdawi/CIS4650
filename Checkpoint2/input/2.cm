@@ -1,13 +1,20 @@
 /* A program to compute the factorial value of an input */
 /* The errors contained in this test file are
-    function declaration with no parameters and without a body
-    variable declaration without a recognized type
+    an unused function prototype
+    a used function ptototype
+    an assignment with a non-integer value on the right hand side
 */
+
+void output(int fac);
+
+void input(void);
+
+void foo(void);
 
 void main(void) {
   int x;
   int fac;
-  double y;
+  int y;
 
   x = input();
   fac = 1;
@@ -19,5 +26,3 @@ void main(void) {
 
   output(fac);
 }
-
-int test2(void)

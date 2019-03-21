@@ -57,7 +57,6 @@ public class SemanticAnalyzer implements AbsynVisitor {
             } else if (exp.rhs instanceof CallExp) {
                 CallExp tempRhs = (CallExp) exp.rhs;
                 rhsType = findType(tempRhs.func);
-                System.out.println(tempRhs.func);
             } else // the value on the right is assumed to be an integer and is assigned zero automatically
                 rhsType = 0;
             if (lhsType != rhsType)
@@ -237,7 +236,8 @@ public class SemanticAnalyzer implements AbsynVisitor {
             else
                 System.err.printf("Error: Already declared function: %s at line %d\n", exp.func, exp.pos+1);
         } else { // if it is a function definition
-            if (!this.symTable.getLast().containsKey(exp.func) || (this.symTable.getLast().containsKey(exp.func) && ((SymItem) this.symTable.getLast().get(exp.func)).level == -1)) {
+            if (!this.symTable.getLast().containsKey(exp.func) ||
+                    (this.symTable.getLast().containsKey(exp.func) && ((SymItem) this.symTable.getLast().get(exp.func)).level < 0)) {
                 indent(level);
                 System.out.println("Entering the scope for function " + exp.func + ": ");
                 currFunc = exp.func;

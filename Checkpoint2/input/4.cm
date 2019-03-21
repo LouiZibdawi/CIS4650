@@ -2,26 +2,26 @@
    algorithm to compute a gcd */
 
 /*	The errors contained in this test file are 
-	function declaration with parameters and an unrecognized type
-	function declaration without parameters and an unrecognized type
+	non-integer array index
+	already declared variable
+	return and function calls are of type int
 */
 
-fire truck(int x, int y) {
-  x = x + y;
-}
+int arr[5];
 
-bubble gum(void) {
-  test = 2 + 3;
+void test(void) {
+	int x;
 }
 
 int gcd(int u, int v) {
-  if (v == 0) return u;
+  if (v) return u;
   else return gcd(v, u - u/v*v);
+  return test();
 }
 
 void main(void) {
-  int x; int y;
-  x = input();
-  y = input();
-  output(gcd(x, y));
+  int x; int y; void z;
+  int x;
+  x = arr[z];
+  y = gcd(x, y);
 }
