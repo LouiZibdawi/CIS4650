@@ -32,6 +32,11 @@ This program uses a makefile to build the program. Type 'make' in the top direct
 program's file structure to build the program. To remove the executable and intermediate files 
 generated from compilation, type "make clean".
 
+Turning on and off of both the semantic analyzer and the parse tree is completed through a toggle
+option found in the CM.java file. This was completed in this way to keep it simple until the end
+of Checkpoint 3, where the flags will isntead be used to determine whether or not a component 
+works or not.
+
 Testing has been automated into separate test files to test different components of the code. There
 are five test files used for this program, as this was the maximum number of test files that we
 were allowed to submit. These tests, therefore, attempt to show both the functionality and the error
@@ -42,37 +47,39 @@ These tests include both positive and negative test cases to show off both corre
 code structures. The files are listed below with a short description of what is contained inside of them:
 
 
-UPDATE THIS SECTION
-   1) 1.cm: This is a modified version of the fac.cm that was provided for use by the professor. The
-      errors included in this are as follows:
-        - Unrecognized type for variables are handled by converting to integer (default)
-        - Unrecognized type for arrays are handled by converting to integer (default)
-      We decided that the best way to handle an invalid type would be to set it to a default value and
-      continue parsing the file. Obviously, this is likely not the best option for a full parser, but
-      for the current scale of the project it makes sense. There are only two variable types, one of 
-      which is void, so converting it to integer is the most logical.
-
-   2) 2.cm: This is another modified version of the fac.cm that was provided to us for use by the professor.
+   1) 1.cm: This is a modified version of the sort.cm that was provided for use by the professor. This file has been created to have no error. This was inentionally to show off a perfect runtime situation
+   of our semantic analyzer.
+        
+   2) 2.cm: This is a modified version of the fac.cm that was provided to us for use by the professor.
       The errors included in this are as follows:
-        - function declaraction with no parameters and without a body
-        - variable declaration without a recognized type 
+        - unused function prototype found at the end of the file
+        - a used function prototype without a function definition 
+      The errors in this file show the implementation and error checking of function prototypes
+      and function definitions. While there are limitations with this implementation, functionality
+      and error checking has been implemented, and has been shown through this test file.
+
    3) 3.cm: This is another modified version of the fac.cm that was provided to us for use by the professor. 
       The errors included in this are as follows:
-        - function declaration with parameters, without a body
-        - array declaraction without a recognized type
+        - an operation with a non-integer value on the right hand side
+        - an undefined variable and a function reference
+        - test expressions are not of type int
 
    4) 4.cm: This is a modified version for gcd.cm that was provided to us by the professor. The
       errors included are as follows:
-        - function declaraction with parameters and an unrecognized type
-        - function declaration without parameters and an unrecognized type
+        - non-integer array index
+        - redefinition of a variable
+        - return and function calls are of the wrong type
 
    5) 5.cm: This is a modified version of sort.cm that was provided to us for use by the professor.
       The errors included in this file are as follows:
-        - function declaration with parameters and an unrecognized type
-        - function declaration without parameters and an unrecognized type
-        - variable declaraction without a recognized type
-        - array declaration without a recognized type
-        - function declaration with parameters, without a body
+        - unused function prototype found at the end of the file
+        - a used function prototype without a function definition 
+        - an operation with a non-integer value on the right hand side
+        - an undefined variable and a function reference
+        - test expressions are not of type int
+        - non-integer array index
+        - redefinition of a variable
+        - return and function calls are of the wrong type
 
 
 -Makefile to Run Tests-
@@ -122,7 +129,13 @@ Assumptions and Limitations
    make sure that a function definition that exists can be found, otherwise an error should be reported.
 9. We assume that there will not be any dangling "return" in the global scope. This goes against the
    C- specification, and is not handled by our semantic analyzer.
-10. 
+10. Our program is super strict and will report everything that is wrong with the program. This might 
+   cause some pieces of code to have multiple errors generated for it. We decided that this was the best 
+   in terms of design because it would allow for the user of the compiler to recognize all of the mistakes
+   that were associated with that piece of code, instead of having to recompile to notice an error that
+   existed before, but was suppressed because another one had precedence. Thus, we have decided to 
+   report all errors.
+
 ===================
 Future Improvements
 ===================
