@@ -34,8 +34,16 @@ test4:
 test5:
 	java -classpath ./jars/cup.jar: CM input/5.cm
 
-C2Test1:
-	java -classpath ./jars/cup.jar: CM input/C2-1.cm
+C1Test1:
+	java -classpath ./jars/cup.jar: CM input/C1-1.cm
+C1Test2:
+	java -classpath ./jars/cup.jar: CM input/C1-2.cm
+C1Test3:
+	java -classpath ./jars/cup.jar: CM input/C1-3.cm
+C1Test4:
+	java -classpath ./jars/cup.jar: CM input/C1-4.cm
+C1Test5:
+	java -classpath ./jars/cup.jar: CM input/C1-5.cm
 
 clean:
 	rm -f parser.java Lexer.java sym.java *.class absyn/*.class *~
