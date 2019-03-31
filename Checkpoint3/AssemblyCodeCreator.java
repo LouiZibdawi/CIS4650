@@ -1,7 +1,23 @@
 import absyn.*;
+import java.io.PrintWriter;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.FileNotFoundException;
 
 public class AssemblyCodeCreator implements AbsynVisitor {
     final static int SPACES = 4;
+
+
+    public static int emitLoc = 0;
+    public static int highEmitLoc = 0;
+    public static int pc = 0;
+    public static int gp = 0;
+    public static int fp = 0;
+    public static int ac = 0;
+    public static int globalOffset = 0;
+    public static int entry = 0;
+    public static int TraceCode = 0;
+    public String filename = "tempFile.txt";
 
     private void indent( int level ) {
         for( int i = 0; i < level * SPACES; i++ ) System.out.print( " " );
@@ -210,4 +226,65 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         exp.left.accept( this, level );
         exp.right.accept( this, level );
     }
+
+
+    // taken from the lecture slides
+    public void emitBackup (int location){
+        if (location > highEmitLoc){
+            emitComment("BUG in emitBackup");
+        }
+        emitLoc = location;
+    }
+
+    public void emitComment(String comment){
+        writeToFile("*" + comment + "\n");
+    }
+
+    // taken from the lecture slides
+    public void emitRestore(int level){
+        emitLoc = highEmitLoc;
+    }
+
+    //Called emitRO in Fei's slides
+    public void emitRegisterOperation(String operation, int regDestination, int val1, int  val2,  String comment){
+        String generatedString = operation + " " + regDestination + ", " + ", " + val1 + ", " + val2 + " " + comment;
+        writeToFile(generatedString);
+    }
+
+    // taken from the lecture slides
+    public void emitRM_Abs(String op, int r, int a, String c){
+        String generatedString = emitLoc + ":  " + op + "  " + r + "," + (a-(emitLoc+1)) + "(" + pc + ")";
+        System.out.println(generatedString);
+        emitLoc = emitLoc + 1;
+        if( TraceCode == 1){
+            System.out.println(c);
+        }
+        if( highEmitLoc< emitLoc){
+            highEmitLoc= emitLoc;
+        }
+    }
+
+    // taken from the lecture slides
+    //calculates skip distance based on input, highEmitLoc, and the highEmitLoc
+    public int emitSkip (int distance){
+        int i = emitLoc;
+        emitLoc += distance;
+        if (highEmitLoc < emitLoc){
+            highEmitLoc = emitLoc;
+        }
+        return i;
+    }
+
+    //generic file writer to pipe output to a file
+    public void writeToFile(String toWrite){
+        PrintWriter outFP = null;
+        try{
+            outFP = new PrintWriter(new FileOutputStream(this.filename, true));
+        }catch(FileNotFoundException e){
+            e.printStackTrace();
+        }
+        outFP.printf(toWrite);
+        outFP.close();
+    }
+
 }
