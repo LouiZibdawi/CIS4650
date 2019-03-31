@@ -39,25 +39,25 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
     public void visit(IfExp exp, int level) {
         indent(level);
-        System.out.println("Entering a new if block: ");
+        emitComment("Entering a new if block: ");
 
         exp.test.accept(this, level);
         exp.thenpart.accept(this, level);
 
         level--;
         indent(level);
-        System.out.println("Leaving the if block");
+        emitComment("Leaving the if block");
 
         if (exp.elsepart != null && !(exp.elsepart instanceof NilExp)) {
             indent(level);
-            System.out.println("Entering a new else block: ");
+            emitComment("Entering a new else block: ");
             level++;
 
             exp.elsepart.accept(this, level);
 
             level--;
             indent(level);
-            System.out.println("Leaving the else block");
+            emitComment("Leaving the else block");
         }
     }
 
@@ -83,7 +83,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
     public void visit(WhileExp exp, int level) {
         indent(level);
-        System.out.println("Entering a new while block: ");
+        emitComment("Entering a new while block: ");
         level++;
 
         exp.test.accept(this, level);
@@ -91,7 +91,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
         level--;
         indent(level);
-        System.out.println("Leaving the while block");
+        emitComment("Leaving the while block");
     }
 
     public void visit(ReturnExp exp, int level) {
@@ -130,7 +130,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
             level--;
         } else { // if it is a function definition
                 indent(level);
-                System.out.println("Entering the scope for function " + exp.func + ": ");
+                emitComment("Entering the scope for function " + exp.func + ": ");
                 currFunc = exp.func;
                 level++;
 
@@ -145,7 +145,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
                 exp.body.accept(this, level);
                 level--;
                 indent(level);
-                System.out.println("Leaving the function scope");
+                emitComment("Leaving the function scope");
                 currFunc = "";
         }
     }
@@ -158,6 +158,37 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     public void visit(DecList expList, int level) {
+        emitComment("Standard prelude: ");
+        emitRegisterManipulation("LD", gp, 0, ac, "load gp with maxaddress");
+        emitRegisterManipulation("LDA", fp, 0, gp, "copy to gp to fp");
+        emitRegisterManipulation("ST", 0, 0, 0, "clear location 0");
+
+
+        int savedLoc = emitSkip(1);
+
+        /* Generate input function */
+        emitComment("Jump around i/o routines here");
+        emitComment("code for input routine");
+        emitRegisterManipulation("ST", 0, -1, fp, "store return");
+        emitRegisterOperation("IN", 0, 0, 0, "input");
+        emitRegisterManipulation("LD", pc, -1, fp, "return to caller");
+
+        /* Generate output function */
+        emitComment("code for output routine");
+        emitRegisterManipulation("ST", 0, -1, fp, "store return");
+        emitRegisterManipulation("LD", 0, -2, fp, "load output value");
+        emitRegisterOperation("OUT", 0, 0, 0, "output");
+        emitRegisterManipulation("LD", 7, -1, fp, "return to caller");
+        int savedLoc2 = emitSkip(0);
+
+
+    /* Set emitLoc to previously stored value
+    Jump around I/O functions*/
+        emitBackup(savedLoc);
+        emitRM_Abs("LDA", pc, savedLoc2, "jump around i/o code");
+        emitRestore();
+        emitComment("End of standard prelude");
+
         while( expList != null ) {
             expList.head.accept( this, level );
             expList = expList.tail;
@@ -183,35 +214,67 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     public void visit(OpExp exp, int level) {
+        emitComment("OpExp Found");
         switch (exp.op){
             case OpExp.PLUS:
-                emitRegisterOperation("ADD",0,69,69, "Test Vals Input");
+                emitRegisterOperation("ADD",ac,1,ac, "Operation +");
                 break;
             case OpExp.MINUS:
-                emitRegisterOperation("SUB",0,69,69, "Test Vals Input");
+                emitRegisterOperation("SUB",ac,1,ac, "Operation -");
                 break;
             case OpExp.TIMES:
-                emitRegisterOperation("MULS",0,69,69, "Test Vals Input");
+                emitRegisterOperation("MULS",ac,1,ac, "Operation *");
                 break;
             case OpExp.OVER:
-                emitRegisterOperation("DIVS",0,69,69, "Test Vals Input");
+                emitRegisterOperation("DIVS",ac,1,ac, "Operation /");
                 break;
             case OpExp.EQ:
+                emitRegisterOperation("EQU", ac, 1, ac, "Operation =" );
                 break;
             case OpExp.LT:
+                emitRegisterOperation("SUB", ac, 1, ac, "Set up comparison" );
+                emitRegisterManipulation("JLT", ac, 2, ac, "Jump if less than" );
+                emitRegisterManipulation("LDC", ac, 0, 0, "Not equal case, fall through assembly logic");
+                emitRegisterManipulation("LDA", pc, 1, pc, "jump 'past' the true case");
+                emitRegisterManipulation("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.GT:
+                emitRegisterOperation("SUB", ac, 1, ac, "Set up comparison" );
+                emitRegisterManipulation("JGT", ac, 2, ac, "Jump if greater than" );
+                emitRegisterManipulation("LDC", ac, 0, 0, "Not equal case, fall through assembly logic");
+                emitRegisterManipulation("LDA", pc, 1, pc, "jump 'past' the true case");
+                emitRegisterManipulation("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.GTE:
+                emitRegisterOperation("SUB", ac, 1, ac, "Set up comparison" );
+                emitRegisterManipulation("JGE", ac, 2, ac, "Jump if greater or equal" );
+                emitRegisterManipulation("LDC", ac, 0, 0, "Not equal case, fall through assembly logic");
+                emitRegisterManipulation("LDA", pc, 1, pc, "jump 'past' the true case");
+                emitRegisterManipulation("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.LTE:
+                emitRegisterOperation("SUB", ac, 1, ac, "Set up comparison" );
+                emitRegisterManipulation("JLE", ac, 2, ac, "Jump if less than or equal" );
+                emitRegisterManipulation("LDC", ac, 0, 0, "Not equal case, fall through assembly logic");
+                emitRegisterManipulation("LDA", pc, 1, pc, "jump 'past' the true case");
+                emitRegisterManipulation("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.NE:
+                emitRegisterOperation("SUB", ac, 1, ac, "Set up comparison" );
+                emitRegisterManipulation("JNE", ac, 2, ac, "Jump if not equal" );
+                emitRegisterManipulation("LDC", ac, 0, 0, "Not equal case, fall through assembly logic");
+                emitRegisterManipulation("LDA", pc, 1, pc, "jump 'past' the true case");
+                emitRegisterManipulation("LDC", ac, 1, 0, "true case");
                 break;
             case OpExp.COMPARE:
+                emitRegisterOperation("SUB", ac, 1, ac, "Set up comparison" );
+                emitRegisterManipulation("JEQ", ac, 2, ac, "Jump if equal" );
+                emitRegisterManipulation("LDC", ac, 0, 0, "Not equal case, fall through assembly logic");
+                emitRegisterManipulation("LDA", pc, 1, pc, "jump 'past' the true case");
+                emitRegisterManipulation("LDC", ac, 1, 0, "true case");
                 break;
             default:
-                System.err.println("OpExp : UNSUPPORTED OPERATION FOUND");
+                System.err.println("Error: unsupported operation found");
         }
 
         exp.left.accept(this, level);
@@ -228,16 +291,16 @@ public class AssemblyCodeCreator implements AbsynVisitor {
                 System.out.print("( ");
                 for (String s : tokens) {
                     if (s.equals("0"))
-                        System.out.print("int ");
+                        emitComment("int ");
                     else if (s.equals("1"))
-                        System.out.print("void ");
+                        emitComment("void ");
                 }
                 System.out.print(") -> ");
             }
             if (symbol.type == 0)
-                System.out.println("int");
+                emitComment("int");
             else if (symbol.type == 1)
-                System.out.println("void");
+                emitComment("void");
         }
     }
 
@@ -250,27 +313,37 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     public void emitComment(String comment){
-        writeToFile("*" + comment + "\n");
+        writeToFile("* " + comment + "\n");
     }
 
     // taken from the lecture slides
-    public void emitRestore(int level){
+    public void emitRestore(){
         emitLoc = highEmitLoc;
     }
 
     //Called emitRO in Fei's slides
     public void emitRegisterOperation(String operation, int regDestination, int val1, int  val2,  String comment){
-        String generatedString = operation + " " + regDestination + ", " + val1 + ", " + val2 + " " + comment + "\n";
+        String generatedString = "  " + emitLoc + ":  " + operation + "\t" + regDestination + "," + val1 + "," + val2 + " \t" + comment + "\n";
+        emitLoc= emitLoc + 1;
         writeToFile(generatedString);
+    }
+    //Called emitRM in Fei's slides
+    public void emitRegisterManipulation(String operation, int regDestination, int offset, int val1, String comment){
+        String generatedString = "  " + emitLoc + ":  " + operation + "\t" + regDestination + "," + offset + ",(" + val1 + ") \t" + comment + "\n";
+        writeToFile(generatedString);
+        emitLoc = emitLoc + 1;
+        if (highEmitLoc < emitLoc){
+            highEmitLoc = emitLoc;
+        }
     }
 
     // taken from the lecture slides
     public void emitRM_Abs(String op, int r, int a, String c){
-        String generatedString = emitLoc + ":  " + op + "  " + r + "," + (a-(emitLoc+1)) + "(" + pc + ")";
-        System.out.println(generatedString);
+        String generatedString = "  " + emitLoc + ":  " + op + "\t" + r + "," + (a-(emitLoc+1)) + "(" + pc + ")\n";
+        writeToFile(generatedString);
         emitLoc = emitLoc + 1;
         if( TraceCode == 1){
-            System.out.println(c);
+            writeToFile(c);
         }
         if( highEmitLoc< emitLoc){
             highEmitLoc= emitLoc;
