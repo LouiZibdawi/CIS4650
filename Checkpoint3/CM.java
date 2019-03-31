@@ -17,6 +17,7 @@ import absyn.*;
 class CM {
     public static final boolean SHOW_TREE = false;
     public static final boolean SHOW_TABLE = true;
+    public static final boolean CREATE_ASSEMBLY = false;
     public static void main(String argv[]) {
     /* Start the parser */
         try {
@@ -34,6 +35,9 @@ class CM {
                 sAnal.printMap(sAnal.symTable.getLast().entrySet().iterator(), 1);
                 System.out.println("Leaving the global scope");
                 sAnal.printUndefined(sAnal.symTable.getLast().entrySet().iterator());
+            }
+            if (CREATE_ASSEMBLY){
+                System.out.println("Paste eating Josh wrote this, to be filled in later");
             }
         } catch (Exception e) {
             /* do cleanup here -- possibly rethrow e */
