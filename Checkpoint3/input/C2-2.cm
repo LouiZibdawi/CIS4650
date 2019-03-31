@@ -1,0 +1,28 @@
+/* A program to compute the factorial value of an input */
+/* The errors contained in this test file are
+    an unused function prototype
+    a used function ptototype
+    an assignment with a non-integer value on the right hand side
+*/
+
+void output(int fac);
+
+void input(void);
+
+void foo(void);
+
+void main(void) {
+  int x;
+  int fac;
+  int y;
+
+  x = input();
+  fac = 1;
+
+  while (x > 1) {
+    fac = fac * x;
+    x = x - 1;
+  } 
+
+  output(fac);
+}

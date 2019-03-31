@@ -16,8 +16,8 @@ import absyn.*;
    
 class CM {
     public static final boolean SHOW_TREE = false;
-    public static final boolean SHOW_TABLE = true;
-    public static final boolean CREATE_ASSEMBLY = false;
+    public static final boolean SHOW_TABLE = false;
+    public static final boolean CREATE_ASSEMBLY = true;
     public static void main(String argv[]) {
     /* Start the parser */
         try {
@@ -38,6 +38,9 @@ class CM {
             }
             if (CREATE_ASSEMBLY){
                 System.out.println("Paste eating Josh wrote this, to be filled in later");
+                AssemblyCodeCreator codeGenerator = new AssemblyCodeCreator();
+                result.accept(codeGenerator,1);
+                System.out.println("Paste eating Josh wrote this, and it ran to completion! :O");
             }
         } catch (Exception e) {
             /* do cleanup here -- possibly rethrow e */

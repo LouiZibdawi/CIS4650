@@ -8,6 +8,9 @@ public class SimpleDec extends VarDec {
         this.pos = pos;
         this.typ = typ;
         this.name = name;
+        this.offset = 0;
+        this.nestLevel = 0;
+
     }
 
     public void accept( AbsynVisitor visitor, int level ) {

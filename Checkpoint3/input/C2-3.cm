@@ -1,0 +1,20 @@
+/* A program to compute the factorial value of an input */
+/* The errors contained in this test file are
+	an operation with a non-integer value on the right hand side
+	undefined variable and function reference
+	test expressions are not of type int
+*/
+
+
+void main(void) {
+  int x; int fac; void oops;
+  x = foo;
+  fac = 1;
+
+  while (oops) {
+    fac = fac * x;
+    x = x - 1;
+  }
+
+  output(fac);
+}

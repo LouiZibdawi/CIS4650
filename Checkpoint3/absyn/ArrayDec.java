@@ -10,6 +10,8 @@ public class ArrayDec extends VarDec {
         this.typ = typ;
         this.name = name;
         this.size = size;
+        this.offset = 0;
+        this.nestLevel =0;
     }
 
     public void accept( AbsynVisitor visitor, int level ) {

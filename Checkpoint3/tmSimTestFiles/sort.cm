@@ -1,6 +1,3 @@
-/* A program to perform selection sort 
-   on a 10 element array */
-
 int x[10];
 
 int minloc(int a[], int low, int high) {
@@ -29,14 +26,6 @@ void sort(int a[], int low, int high) {
     a[i] = t;
     i = i + 1;
   }
-}
-
-int input(void) {
-	int usrInput;
-}
-
-int output(int value) {
-	value = value;
 }
 
 void main(void) {

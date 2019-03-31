@@ -1,0 +1,27 @@
+/* A program to perform Euclid's 
+   algorithm to compute a gcd */
+
+/*	The errors contained in this test file are 
+	non-integer array index
+	already declared variable
+	return and function calls are of type int
+*/
+
+int arr[5];
+
+void test(void) {
+	int x;
+}
+
+int gcd(int u, int v) {
+  if (v) return u;
+  else return gcd(v, u - u/v*v);
+  return test();
+}
+
+void main(void) {
+  int x; int y; void z;
+  int x;
+  x = arr[z];
+  y = gcd(x, y);
+}
