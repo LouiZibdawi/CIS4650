@@ -10,9 +10,9 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
     public static int emitLoc = 0;
     public static int highEmitLoc = 0;
-    public static int pc = 0;
-    public static int gp = 0;
-    public static int fp = 0;
+    public static int pc = 7;
+    public static int gp = 6;
+    public static int fp = 5;
     public static int ac = 0;
     public static int globalOffset = 0;
     public static int entry = 0;
