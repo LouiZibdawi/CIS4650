@@ -1,14 +1,13 @@
-/* A program to test basic math operations*/
-
 void main(void) {
-  int i; int x; int k;
-  i = i + 1;
-  i = i - 1;
-  i = i * 1;
-  i = i / 1;
-  
-  if (i < 0){
-    i = 1;
-  }
-  return i;
+  int x; int fac;
+
+  x = input(); 
+  fac = 1;
+
+  while (x > 1) {
+    fac = fac * x;
+    x = x - 1;
+  } 
+
+  output(fac);
 }
