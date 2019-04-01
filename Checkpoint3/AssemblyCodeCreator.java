@@ -9,7 +9,6 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     private static String tempParams = "";
     private static String currFunc = "";
 
-
     public static int emitLoc = 0;
     public static int highEmitLoc = 0;
     public static int pc = 7;
@@ -20,15 +19,18 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     public static int offset = 0;
     public static int entry = 0;
     public static int TraceCode = 0;
-    public String filename = "tempFile.txt";
+    public static String filename = "tempFile.tm";
 
     private void indent(int level) {
         for( int i = 0; i < level * SPACES; i++ ) System.out.print(" ");
     }
 
-    public AssemblyCodeCreator() {
+    public AssemblyCodeCreator(String inputFile) {
         this.symTable = new LinkedList<HashMap<String, SymItem>>();
         this.symTable.add(new HashMap<String, SymItem>());
+        this.filename = inputFile.substring(0, inputFile.indexOf(".")) + ".tm";
+        emitComment("C-Minus Compilation to TM Code");
+        emitComment("File: " + this.filename);
     }
 
 
@@ -226,8 +228,6 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitRegisterMemory("LD", gp, 0, ac, "load gp with maxaddress");
         emitRegisterMemory("LDA", fp, 0, gp, "copy to gp to fp");
         emitRegisterMemory("ST", 0, 0, 0, "clear location 0");
-
-
         int savedLoc = emitSkip(1);
 
         /* Generate input function */
@@ -245,30 +245,25 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitRegisterMemory("LD", 7, -1, fp, "return to caller");
         int savedLoc2 = emitSkip(0);
 
-
-    /* Set emitLoc to previously stored value
-    Jump around I/O functions*/
+        /* Set emitLoc to previously stored value
+        Jump around I/O functions*/
         emitBackup(savedLoc);
         emitRM_Abs("LDA", pc, savedLoc2, "jump around i/o code");
         emitRestore();
-        emitComment("End of standard prelude");
+        emitComment("End of standard prelude.");
 
         while( expList != null ) {
             expList.head.accept( this, level );
             expList = expList.tail;
         }
 
-        emitRegisterMemory( "LDA", fp, globalOffset, fp, "push frame" );
-        emitRegisterMemory( "LDA", ac, 1, pc, "load ac with ret ptr" );
-        emitRM_Abs( "LDA", pc, entry, "jump to main loc" );
-        emitRegisterMemory( "LD", fp, 0, fp, "pop frame" );
-        emitRegisterOnly( "HALT", 0, 0, 0, "" );
-
-
-
-
-
-
+        // 64:     ST  5,0(5) 	push ofp?
+        emitRegisterMemory("LDA", fp, globalOffset, fp, "push frame" );
+        emitRegisterMemory("LDA", ac, 1, pc, "load ac with ret ptr" );
+        emitRM_Abs("LDA", pc, entry, "jump to main loc" );
+        emitRegisterMemory("LD", fp, 0, fp, "pop frame" );
+        emitComment("End of execution.");
+        emitRegisterOnly("HALT", 0, 0, 0, "" );
 
     }
 
@@ -406,68 +401,58 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
 
     // taken from the lecture slides
-    public void emitBackup (int location){
-        if (location > highEmitLoc){
-            emitComment("BUG in emitBackup");
-        }
+    public void emitBackup (int location) {
+        if (location > highEmitLoc) emitComment("BUG in emitBackup");
         emitLoc = location;
     }
 
-    public void emitComment(String comment){
+    public void emitComment(String comment) {
         writeToFile("* " + comment + "\n");
     }
 
     // taken from the lecture slides
-    public void emitRestore(){
+    public void emitRestore() {
         emitLoc = highEmitLoc;
     }
 
     //Called emitRO in Fei's slides
-    public void emitRegisterOnly(String operation, int regDestination, int val1, int  val2,  String comment){
-        String generatedString = "  " + emitLoc + ":  " + operation + "\t" + regDestination + "," + val1 + "," + val2 + " \t" + comment + "\n";
-        emitLoc= emitLoc + 1;
+    public void emitRegisterOnly(String operation, int regDestination, int val1, int  val2,  String comment) {
+        String generatedString = "\t" + emitLoc + ":\t" + operation + "\t" + regDestination + "," + val1 + "," + val2 + " \t" + comment + "\n";
         writeToFile(generatedString);
+        emitLoc++;
     }
     //Called emitRM in Fei's slides
-    public void emitRegisterMemory(String operation, int regDestination, int offset, int val1, String comment){
-        String generatedString = "  " + emitLoc + ":  " + operation + "\t" + regDestination + "," + offset + "(" + val1 + ") \t" + comment + "\n";
+    public void emitRegisterMemory(String operation, int regDestination, int offset, int val1, String comment) {
+        String generatedString = "\t" + emitLoc + ":\t" + operation + "\t" + regDestination + "," + offset + "(" + val1 + ") \t" + comment + "\n";
         writeToFile(generatedString);
-        emitLoc = emitLoc + 1;
-        if (highEmitLoc < emitLoc){
-            highEmitLoc = emitLoc;
-        }
+        emitLoc++;
+        if (highEmitLoc < emitLoc) highEmitLoc = emitLoc;
     }
 
     // taken from the lecture slides
-    public void emitRM_Abs(String op, int r, int a, String c){
-        String generatedString = "  " + emitLoc + ":  " + op + "\t" + r + "," + (a-(emitLoc+1)) + "(" + pc + ")\n";
+    public void emitRM_Abs(String op, int r, int a, String c) {
+        String generatedString = "\t" + emitLoc + ":\t" + op + "\t" + r + "," + (a-(emitLoc+1)) + "(" + pc + ")\n";
         writeToFile(generatedString);
-        emitLoc = emitLoc + 1;
-        if( TraceCode == 1){
-            writeToFile(c);
-        }
-        if( highEmitLoc< emitLoc){
-            highEmitLoc= emitLoc;
-        }
+        emitLoc++;
+        if ( TraceCode == 1) writeToFile(c);
+        if (highEmitLoc < emitLoc) highEmitLoc = emitLoc;
     }
 
     // taken from the lecture slides
     //calculates skip distance based on input, highEmitLoc, and the highEmitLoc
-    public int emitSkip (int distance){
+    public int emitSkip (int distance) {
         int i = emitLoc;
         emitLoc += distance;
-        if (highEmitLoc < emitLoc){
-            highEmitLoc = emitLoc;
-        }
+        if (highEmitLoc < emitLoc) highEmitLoc = emitLoc;
         return i;
     }
 
     //generic file writer to pipe output to a file
-    public void writeToFile(String toWrite){
+    public void writeToFile(String toWrite) {
         PrintWriter outFP = null;
-        try{
+        try {
             outFP = new PrintWriter(new FileOutputStream(this.filename, true));
-        }catch(FileNotFoundException e){
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         outFP.printf(toWrite);

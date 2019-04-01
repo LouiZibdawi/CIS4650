@@ -36,9 +36,9 @@ class CM {
                 System.out.println("Leaving the global scope");
                 sAnal.printUndefined(sAnal.symTable.getLast().entrySet().iterator());
             }
-            if (CREATE_ASSEMBLY){
-                AssemblyCodeCreator codeGenerator = new AssemblyCodeCreator();
-                result.accept(codeGenerator,1);
+            if (CREATE_ASSEMBLY) {
+                AssemblyCodeCreator codeGenerator = new AssemblyCodeCreator(argv[0]);
+                result.accept(codeGenerator, 1);
             }
         } catch (Exception e) {
             /* do cleanup here -- possibly rethrow e */
