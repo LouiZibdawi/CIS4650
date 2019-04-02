@@ -15,8 +15,8 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     private static final int gp = 6;
     private static final int fp = 5;
     private static final int ac = 0;
-    private static final int retFO = -1; // unused
-    private static final int initFO = -2; // unused
+    private static final int retFO = -1; // unused and don't know what for
+    private static final int initFO = -2; // unused and don't know what for
     public static int globalOffset = 0;
     public static int offset = 0;
     public static int entry = 0;
@@ -100,11 +100,13 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
     public void visit(CallExp exp, int level) {
         emitComment("-> call of function: " + exp.func);
+        int argCount = -2; // -2 for arg 0 (first arg)
         ExpList args = exp.args;
         while (args != null) {
             args.head.accept(this, level);
             args = args.tail;
-            emitRegisterMemory("ST", ac, offset, fp, "store arg val"); // 57:     ST  0,-6(5) 	store arg val ???
+            emitRegisterMemory("ST", ac, offset+argCount, fp, "store arg val");
+            argCount--;
         }
         emitRegisterMemory("ST", fp, offset, fp, "push ofp");
         emitRegisterMemory("LDA", fp, offset, fp, "push frame");
@@ -121,27 +123,25 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     public void visit(WhileExp exp, int level) {
-//        indent(level);
         this.symTable.addFirst(new HashMap<String, SymItem>());
         level++;
 
         emitComment("-> while");
         emitComment("while: jump after body comes back here");
+        int savedTestLoc = emitSkip(0);
         exp.test.accept(this, level);
         emitComment("while: jump to end belongs here");
-        int savedLoc = emitSkip(1); // continue here
+        int savedBodyLoc = emitSkip(1);
         exp.body.accept(this, level);
-        int savedLoc2 = emitSkip(0);
-        emitBackup(savedLoc);
-        emitRM_Abs("LDA", pc, savedLoc2, "while: absolute jmp to test");
+        emitRM_Abs("LDA", pc, savedTestLoc, "while: absolute jmp to test");
+        int savedEndLoc = emitSkip(0);
+        emitBackup(savedBodyLoc);
+        emitRM_Abs("JEQ", ac, savedEndLoc, "while: jmp to end");
         emitRestore();
-        emitRegisterMemory("JEQ", ac, emitLoc--, pc, "while: jmp to end");
         emitComment("<- while");
 
-//        printMap(this.symTable.getFirst().entrySet().iterator(), level);
         level--;
         this.symTable.removeFirst();
-//        indent(level);
     }
 
     public void visit(ReturnExp exp, int level) {
@@ -192,14 +192,11 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         } else { // if it is a function definition
             if (!this.symTable.getLast().containsKey(exp.func) ||
                     (this.symTable.getLast().containsKey(exp.func) && ((SymItem) this.symTable.getLast().get(exp.func)).level < 0)) {
-                indent(level);
-
                 emitComment("processing function: " + exp.func);
                 emitComment("jump around function body here");
-                //TODO store value
 
-                int tempLocation = emitSkip(1);
-                emitRegisterMemory("ST", fp, -1, fp, "store return");
+                int savedFuncLoc = emitSkip(1);
+                emitRegisterMemory("ST", ac, -1, fp, "store return");
                 entry = emitLoc-1;
 
                 currFunc = exp.func;
@@ -216,11 +213,15 @@ public class AssemblyCodeCreator implements AbsynVisitor {
                 this.symTable.getLast().put(exp.func, sym);
 
                 exp.body.accept(this, level);
-                printMap(this.symTable.getFirst().entrySet().iterator(), level);
+                emitRegisterMemory("LD", pc, -1, fp, "return to caller");
+                int savedBodyLoc = emitSkip(0);
+                emitBackup(savedFuncLoc);
+                emitRM_Abs("LDA", pc, savedBodyLoc, "jump around fn body");
+                emitRestore();
+                emitComment("<- fundecl");
+
                 level--;
                 this.symTable.removeFirst();
-                indent(level);
-                emitComment("Leaving the function scope");
                 currFunc = "";
             } else
                 System.err.printf("Error: Already declared function: %s at line %d\n", exp.func, exp.pos+1);
@@ -269,11 +270,10 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitRegisterMemory("ST", 0, -1, fp, "store return");
         emitRegisterMemory("LD", 0, -2, fp, "load output value");
         emitRegisterOnly("OUT", 0, 0, 0, "output");
-        emitRegisterMemory("LD", 7, -1, fp, "return to caller");
+        emitRegisterMemory("LD", pc, -1, fp, "return to caller");
         int savedLoc2 = emitSkip(0);
 
-        /* Set emitLoc to previously stored value
-        Jump around I/O functions*/
+        /* Set emitLoc to previously stored value; jump around I/O functions*/
         emitBackup(savedLoc);
         emitRM_Abs("LDA", pc, savedLoc2, "jump around i/o code");
         emitRestore();
@@ -284,13 +284,13 @@ public class AssemblyCodeCreator implements AbsynVisitor {
             expList = expList.tail;
         }
 
-        // emitRegisterMemory("ST", fp, globalOffset+ofpFO, fp, "push ofp"); // 64:     ST  5,0(5) 	push ofp?
-        emitRegisterMemory("LDA", fp, globalOffset, fp, "push frame" );
-        emitRegisterMemory("LDA", ac, 1, pc, "load ac with ret ptr" );
-        emitRM_Abs("LDA", pc, entry, "jump to main loc" );
-        emitRegisterMemory("LD", fp, 0, fp, "pop frame" );
+        emitRegisterMemory("ST", fp, globalOffset, fp, "push ofp"); // ???: what's globalOffset+ofpFO
+        emitRegisterMemory("LDA", fp, globalOffset, fp, "push frame");
+        emitRegisterMemory("LDA", ac, 1, pc, "load ac with ret ptr");
+        emitRM_Abs("LDA", pc, entry, "jump to main loc");
+        emitRegisterMemory("LD", fp, 0, fp, "pop frame");
         emitComment("End of execution.");
-        emitRegisterOnly("HALT", 0, 0, 0, "" );
+        emitRegisterOnly("HALT", 0, 0, 0, "");
 
     }
 
