@@ -149,6 +149,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         if (exp.exp != null) {
             exp.exp.accept(this, level);
         }
+        emitRegisterMemory("LD", pc, -1, fp, "return to caller");
         emitComment("<- return");
     }
 
