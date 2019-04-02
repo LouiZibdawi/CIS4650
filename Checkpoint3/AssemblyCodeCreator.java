@@ -149,7 +149,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         if (exp.exp != null) {
             exp.exp.accept(this, level);
         }
-        emitRegisterMemory("LD", pc, -1, fp, "return to caller");
+        emitRegisterMemory(" LD", pc, -1, fp, "return to caller");
         emitComment("<- return");
     }
 
@@ -214,7 +214,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
                 this.symTable.getLast().put(exp.func, sym);
 
                 exp.body.accept(this, level);
-                emitRegisterMemory("LD", pc, -1, fp, "return to caller");
+                emitRegisterMemory(" LD", pc, -1, fp, "return to caller");
                 int savedBodyLoc = emitSkip(0);
                 emitBackup(savedFuncLoc);
                 emitRM_Abs("LDA", pc, savedBodyLoc, "jump around fn body");
@@ -271,7 +271,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitRegisterMemory(" ST", 0, -1, fp, "store return");
         emitRegisterMemory(" LD", 0, -2, fp, "load output value");
         emitRegisterOnly("OUT", 0, 0, 0, "output");
-        emitRegisterMemory("LD", pc, -1, fp, "return to caller");
+        emitRegisterMemory(" LD", pc, -1, fp, "return to caller");
         int savedLoc2 = emitSkip(0);
 
         /* Set emitLoc to previously stored value; jump around I/O functions*/
@@ -289,7 +289,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitRegisterMemory("LDA", fp, globalOffset, fp, "push frame");
         emitRegisterMemory("LDA", ac, 1, pc, "load ac with ret ptr");
         emitRM_Abs("LDA", pc, entry, "jump to main loc");
-        emitRegisterMemory("LD", fp, 0, fp, "pop frame");
+        emitRegisterMemory(" LD", fp, 0, fp, "pop frame");
         emitComment("End of execution.");
         emitRegisterOnly("HALT", 0, 0, 0, "");
 
