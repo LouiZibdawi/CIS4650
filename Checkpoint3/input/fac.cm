@@ -1,6 +1,6 @@
 void main(void) {
   int x; int fac;
- 
+
   x = input();
   fac = 1;
 

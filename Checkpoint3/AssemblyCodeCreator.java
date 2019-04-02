@@ -11,10 +11,12 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
     public static int emitLoc = 0;
     public static int highEmitLoc = 0;
-    public static int pc = 7;
-    public static int gp = 6;
-    public static int fp = 5;
-    public static int ac = 0;
+    private static final int pc = 7;
+    private static final int gp = 6;
+    private static final int fp = 5;
+    private static final int ac = 0;
+    private static final int retFO = -1; // unused
+    private static final int initFO = -2; // unused
     public static int globalOffset = 0;
     public static int offset = 0;
     public static int entry = 0;
@@ -42,8 +44,13 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     public void visit(AssignExp exp, int level) {
-        exp.lhs.accept(this, level);
+        emitComment("-> op");
+        exp.lhs.accept(this, 0);
+        emitRegisterMemory("ST", ac, offset--, fp, "op: push left");
         exp.rhs.accept(this, level);
+        emitRegisterMemory("LD", 1, ++offset, fp, "op: load left");
+        emitRegisterMemory("ST", ac, ac, 1, "assign: store value");
+        emitComment("<- op");
     }
 
     public void visit(IfExp exp, int level) {
@@ -78,11 +85,13 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     public void visit(IntExp exp, int level) {
-
+        emitComment("-> constant");
+        emitRegisterMemory("LDC", ac, exp.value, ac, "load const");
+        emitComment("<- constant");
     }
 
     public void visit(VarExp exp, int level) {
-        exp.name.accept(this, level);
+        exp.name.accept(this, 1);
     }
 
     public void visit(NilExp exp, int level) {
@@ -90,15 +99,23 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     public void visit(CallExp exp, int level) {
+        emitComment("-> call of function: " + exp.func);
         ExpList args = exp.args;
         while (args != null) {
             args.head.accept(this, level);
             args = args.tail;
+            emitRegisterMemory("ST", ac, offset, fp, "store arg val"); // 57:     ST  0,-6(5) 	store arg val ???
         }
+        emitRegisterMemory("ST", fp, offset, fp, "push ofp");
+        emitRegisterMemory("LDA", fp, offset, fp, "push frame");
+        emitRegisterMemory("LDA", ac, 1, pc, "load ac with ret ptr");
+        emitRM_Abs("LDA", pc, entry, "jump to fun loc" );
+        emitRegisterMemory("LD", fp, ac, fp, "pop frame");
         if (this.symTable.getLast().containsKey(exp.func)) {
             if (((SymItem) this.symTable.getLast().get(exp.func)).level == -1)
                 ((SymItem) this.symTable.getLast().get(exp.func)).level = -2; // mark as used prototype
         }
+        emitComment("<- call");
     }
 
     public void visit(WhileExp exp, int level) {
@@ -173,6 +190,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
                 int tempLocation = emitSkip(1);
                 emitRegisterMemory("ST", fp, -1, fp, "store return");
+                entry = emitLoc-1;
 
                 currFunc = exp.func;
                 this.symTable.addFirst(new HashMap<String, SymItem>());
@@ -180,7 +198,6 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
                 VarDecList parms = exp.params;
                 tempParams = ""; // clear before using
-                emitComment("-> compound statement");
                 while (parms != null) {
                     parms.head.accept(this, level);
                     parms = parms.tail;
@@ -201,7 +218,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     public void visit(SimpleDec exp, int level){
-        SymItem sym = new SymItem(exp.name, exp.typ.typ, level, "");
+        SymItem sym = new SymItem(exp.name, exp.typ.typ, level, "", offset--);
         if (!this.symTable.getFirst().containsKey(exp.name)) {
             this.symTable.getFirst().put(exp.name, sym);
             tempParams += exp.typ.typ + " ";
@@ -215,7 +232,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         if (exp.size != null)
             name += exp.size.value + "";
         name += "]";
-        SymItem sym = new SymItem(name, exp.typ.typ, level, "");
+        SymItem sym = new SymItem(name, exp.typ.typ, level, "", offset--);
         if (!this.symTable.getFirst().containsKey(exp.name)) {
             this.symTable.getFirst().put(exp.name, sym);
             tempParams += exp.typ.typ + " ";
@@ -257,7 +274,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
             expList = expList.tail;
         }
 
-        // 64:     ST  5,0(5) 	push ofp?
+        // emitRegisterMemory("ST", fp, globalOffset+ofpFO, fp, "push ofp"); // 64:     ST  5,0(5) 	push ofp?
         emitRegisterMemory("LDA", fp, globalOffset, fp, "push frame" );
         emitRegisterMemory("LDA", ac, 1, pc, "load ac with ret ptr" );
         emitRM_Abs("LDA", pc, entry, "jump to main loc" );
@@ -274,15 +291,19 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         }
     }
 
-    public void visit(IndexVar exp, int level) {
+    public void visit(IndexVar exp, int isParam) { // TODO: check if param or not and proceed accordingly
         emitComment("-> subs");
-        exp.index.accept(this, level);
+        exp.index.accept(this, isParam);
         emitComment("<- subs");
     }
 
-    public void visit(SimpleVar exp, int level) {
+    public void visit(SimpleVar exp, int isParam) {
+        int tempOffset = 10000000;
+        if (symExists(exp.name)) tempOffset = findOffset(exp.name);
         emitComment("-> id");
-
+        emitComment("looking up id: " + exp.name);
+        if (isParam == 0) emitRegisterMemory("LDA", ac, tempOffset, fp, "load id address");
+        else emitRegisterMemory("LD", ac, tempOffset, fp, "load id value");
         emitComment("<- id");
     }
 
@@ -399,6 +420,25 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         }
     }
 
+    public boolean symExists(String name) {
+        if (this.symTable.size() != 0) {
+            for (int i = 0; i < this.symTable.size(); i++) {
+                if (this.symTable.get(i).containsKey(name))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    public int findOffset(String name) {
+        if (this.symTable.size() != 0) {
+            for (int i = 0; i < this.symTable.size(); i++) {
+                if (this.symTable.get(i).containsKey(name))
+                    return ((SymItem) this.symTable.get(i).get(name)).offset;
+            }
+        }
+        return 10000000;
+    }
 
     // taken from the lecture slides
     public void emitBackup (int location) {
