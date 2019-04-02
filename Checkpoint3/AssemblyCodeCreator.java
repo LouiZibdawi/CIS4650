@@ -121,19 +121,27 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     public void visit(WhileExp exp, int level) {
-        indent(level);
-        emitComment("-> while");
+//        indent(level);
         this.symTable.addFirst(new HashMap<String, SymItem>());
         level++;
 
+        emitComment("-> while");
+        emitComment("while: jump after body comes back here");
         exp.test.accept(this, level);
+        emitComment("while: jump to end belongs here");
+        int savedLoc = emitSkip(1); // continue here
         exp.body.accept(this, level);
+        int savedLoc2 = emitSkip(0);
+        emitBackup(savedLoc);
+        emitRM_Abs("LDA", pc, savedLoc2, "while: absolute jmp to test");
+        emitRestore();
+        emitRegisterMemory("JEQ", ac, emitLoc--, pc, "while: jmp to end");
+        emitComment("<- while");
 
-        printMap(this.symTable.getFirst().entrySet().iterator(), level);
+//        printMap(this.symTable.getFirst().entrySet().iterator(), level);
         level--;
         this.symTable.removeFirst();
-        indent(level);
-        emitComment("<- while");
+//        indent(level);
     }
 
     public void visit(ReturnExp exp, int level) {
@@ -315,20 +323,10 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
     public void visit(OpExp exp, int level) {
         emitComment("-> op");
-
-        if (exp.left instanceof VarExp){
-            //TODO how to handle VarExp
-        } else if (exp.left instanceof CallExp){
-            //TODO how to handle CallExp
-        }
-
-        if (exp.right instanceof  VarExp){
-            //TODO how to handle VarExp
-        }else if (exp.right instanceof CallExp){
-            //TODO how to handle CallExp
-        }
-
-
+        exp.left.accept(this, level);
+        emitRegisterMemory("ST", ac, offset--, fp, "op: push left");
+        exp.right.accept(this, level);
+        emitRegisterMemory("LD", 1, ++offset, fp, "op: load left");
         switch (exp.op){
             case OpExp.PLUS:
                 emitRegisterOnly("ADD",ac,1,ac, "op +");
@@ -337,62 +335,59 @@ public class AssemblyCodeCreator implements AbsynVisitor {
                 emitRegisterOnly("SUB",ac,1,ac, "op -");
                 break;
             case OpExp.TIMES:
-                emitRegisterOnly("MULS",ac,1,ac, "op *");
+                emitRegisterOnly("MUL",ac,1,ac, "op *");
                 break;
             case OpExp.OVER:
-                emitRegisterOnly("DIVS",ac,1,ac, "op /");
+                emitRegisterOnly("DIV",ac,1,ac, "op /");
                 break;
-            case OpExp.EQ:
-                emitRegisterOnly("EQU", ac, 1, ac, "op =" );
-                break;
+//            case OpExp.EQ:
+//                emitRegisterOnly("EQU", ac, 1, ac, "op =" );
+//                break;
             case OpExp.LT:
-                emitRegisterOnly("SUB", ac, 1, ac, "Set up comparison" );
-                emitRegisterMemory("JLT", ac, 2, ac, "Jump if less than" );
-                emitRegisterMemory("LDC", ac, 0, 0, "Not equal case, fall through assembly logic");
-                emitRegisterMemory("LDA", pc, 1, pc, "jump 'past' the true case");
-                emitRegisterMemory("LDC", ac, 1, 0, "true case");
+                emitRegisterOnly("SUB", ac, 1, ac, "op <");
+                emitRegisterMemory("JLT", ac, 2, pc, "br if true");
+                emitRegisterMemory("LDC", ac, ac, ac, "false case");
+                emitRegisterMemory("LDA", pc, 1, pc, "unconditional jmp");
+                emitRegisterMemory("LDC", ac, 1, ac, "true case");
                 break;
             case OpExp.GT:
-                emitRegisterOnly("SUB", ac, 1, ac, "Set up comparison" );
-                emitRegisterMemory("JGT", ac, 2, ac, "Jump if greater than" );
-                emitRegisterMemory("LDC", ac, 0, 0, "Not equal case, fall through assembly logic");
-                emitRegisterMemory("LDA", pc, 1, pc, "jump 'past' the true case");
-                emitRegisterMemory("LDC", ac, 1, 0, "true case");
+                emitRegisterOnly("SUB", ac, 1, ac, "op >");
+                emitRegisterMemory("JGT", ac, 2, pc, "br if true");
+                emitRegisterMemory("LDC", ac, ac, ac, "false case");
+                emitRegisterMemory("LDA", pc, 1, pc, "unconditional jmp");
+                emitRegisterMemory("LDC", ac, 1, ac, "true case");
                 break;
             case OpExp.GTE:
-                emitRegisterOnly("SUB", ac, 1, ac, "Set up comparison" );
-                emitRegisterMemory("JGE", ac, 2, ac, "Jump if greater or equal" );
-                emitRegisterMemory("LDC", ac, 0, 0, "Not equal case, fall through assembly logic");
-                emitRegisterMemory("LDA", pc, 1, pc, "jump 'past' the true case");
-                emitRegisterMemory("LDC", ac, 1, 0, "true case");
+                emitRegisterOnly("SUB", ac, 1, ac, "op >=");
+                emitRegisterMemory("JGE", ac, 2, pc, "br if true");
+                emitRegisterMemory("LDC", ac, ac, ac, "false case");
+                emitRegisterMemory("LDA", pc, 1, pc, "unconditional jmp");
+                emitRegisterMemory("LDC", ac, 1, ac, "true case");
                 break;
             case OpExp.LTE:
-                emitRegisterOnly("SUB", ac, 1, ac, "Set up comparison" );
-                emitRegisterMemory("JLE", ac, 2, ac, "Jump if less than or equal" );
-                emitRegisterMemory("LDC", ac, 0, 0, "Not equal case, fall through assembly logic");
-                emitRegisterMemory("LDA", pc, 1, pc, "jump 'past' the true case");
-                emitRegisterMemory("LDC", ac, 1, 0, "true case");
+                emitRegisterOnly("SUB", ac, 1, ac, "op <=");
+                emitRegisterMemory("JLE", ac, 2, pc, "br if true");
+                emitRegisterMemory("LDC", ac, ac, ac, "false case");
+                emitRegisterMemory("LDA", pc, 1, pc, "unconditional jmp");
+                emitRegisterMemory("LDC", ac, 1, ac, "true case");
                 break;
             case OpExp.NE:
-                emitRegisterOnly("SUB", ac, 1, ac, "Set up comparison" );
-                emitRegisterMemory("JNE", ac, 2, ac, "Jump if not equal" );
-                emitRegisterMemory("LDC", ac, 0, 0, "Not equal case, fall through assembly logic");
-                emitRegisterMemory("LDA", pc, 1, pc, "jump 'past' the true case");
-                emitRegisterMemory("LDC", ac, 1, 0, "true case");
+                emitRegisterOnly("SUB", ac, 1, ac, "op !=");
+                emitRegisterMemory("JNE", ac, 2, pc, "br if true");
+                emitRegisterMemory("LDC", ac, ac, ac, "false case");
+                emitRegisterMemory("LDA", pc, 1, pc, "unconditional jmp");
+                emitRegisterMemory("LDC", ac, 1, ac, "true case");
                 break;
             case OpExp.COMPARE:
-                emitRegisterOnly("SUB", ac, 1, ac, "Set up comparison" );
-                emitRegisterMemory("JEQ", ac, 2, ac, "Jump if equal" );
-                emitRegisterMemory("LDC", ac, 0, 0, "Not equal case, fall through assembly logic");
-                emitRegisterMemory("LDA", pc, 1, pc, "jump 'past' the true case");
-                emitRegisterMemory("LDC", ac, 1, 0, "true case");
+                emitRegisterOnly("SUB", ac, 1, ac, "op ==");
+                emitRegisterMemory("JEQ", ac, 2, pc, "br if true");
+                emitRegisterMemory("LDC", ac, ac, ac, "false case");
+                emitRegisterMemory("LDA", pc, 1, pc, "unconditional jmp");
+                emitRegisterMemory("LDC", ac, 1, ac, "true case");
                 break;
             default:
                 System.err.println("Error: unsupported operation found");
         }
-
-        exp.left.accept(this, level);
-        exp.right.accept(this, level);
         emitComment("<- op");
     }
 
