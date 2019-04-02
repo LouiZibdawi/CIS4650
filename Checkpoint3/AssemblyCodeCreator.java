@@ -20,7 +20,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     public static int globalOffset = 0;
     public static int offset = 0;
     public static int entry = 0;
-    public static int TraceCode = 0;
+    public static int TraceCode = 1;
     public static String filename = "tempFile.tm";
 
     private void indent(int level) {
@@ -109,7 +109,9 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitRegisterMemory("ST", fp, offset, fp, "push ofp");
         emitRegisterMemory("LDA", fp, offset, fp, "push frame");
         emitRegisterMemory("LDA", ac, 1, pc, "load ac with ret ptr");
-        emitRM_Abs("LDA", pc, entry, "jump to fun loc" );
+        if (exp.func.equals("input")) emitRM_Abs("LDA", pc, 4, "jump to fun loc"); // doesn't work
+        else if (exp.func.equals("output")) emitRM_Abs("LDA", pc, 7, "jump to fun loc");
+        else emitRM_Abs("LDA", pc, entry, "jump to fun loc");
         emitRegisterMemory("LD", fp, ac, fp, "pop frame");
         if (this.symTable.getLast().containsKey(exp.func)) {
             if (((SymItem) this.symTable.getLast().get(exp.func)).level == -1)
@@ -471,10 +473,11 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
     // taken from the lecture slides
     public void emitRM_Abs(String op, int r, int a, String c) {
-        String generatedString = "\t" + emitLoc + ":\t" + op + "\t" + r + "," + (a-(emitLoc+1)) + "(" + pc + ")\n";
+        String generatedString = "\t" + emitLoc + ":\t" + op + "\t" + r + "," + (a-(emitLoc+1)) + "(" + pc + ") \t";
         writeToFile(generatedString);
         emitLoc++;
-        if ( TraceCode == 1) writeToFile(c);
+        if ( TraceCode == 1) writeToFile(c + "\n");
+        else writeToFile("\n");
         if (highEmitLoc < emitLoc) highEmitLoc = emitLoc;
     }
 
