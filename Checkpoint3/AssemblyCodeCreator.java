@@ -426,32 +426,6 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitComment("<- op");
     }
 
-
-/*    public void printMap(Iterator i, int level) {
-        while (i.hasNext()) {
-            SymItem symbol = (SymItem) ((Map.Entry) i.next()).getValue();
-//            indent(level);
-            emitComment("processing local var: " + symbol.name);
-            System.out.print(symbol.name + ": ");
-            if (!symbol.params.isEmpty()) {
-                String[] tokens = symbol.params.split(" ");
-
-                System.out.print("( ");
-                for (String s : tokens) {
-                    if (s.equals("0"))
-                        System.out.print("int ");
-                    else if (s.equals("1"))
-                        System.out.print("void ");
-                }
-                System.out.print(") -> ");
-            }
-            if (symbol.type == 0)
-                System.out.println("int");
-            else if (symbol.type == 1)
-                System.out.println("void");
-        }
-    }*/
-
     public boolean symExists(String name) {
         if (this.symTable.size() != 0) {
             for (int i = 0; i < this.symTable.size(); i++) {
