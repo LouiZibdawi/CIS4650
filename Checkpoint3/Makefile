@@ -20,29 +20,29 @@ parser.java: cminus.cup
 	$(CUP) -expect 3 < cminus.cup
 
 test0:
-	-rm tempFile.txt
+	-rm input/0.tm
 	java -classpath ./jars/cup.jar: CM input/0.cm
-	cat tempFile.txt
+	cat input/0.tm
 test1:
-	-rm tempFile.txt
+	-rm input/1.tm
 	java -classpath ./jars/cup.jar: CM input/1.cm
-	cat tempFile.txt
+	cat input/1.tm
 test2:
-	-rm tempFile.txt
+	-rm input/2.tm
 	java -classpath ./jars/cup.jar: CM input/2.cm
-	cat tempFile.txt
+	cat input/2.tm
 test3:
-	-rm tempFile.txt
+	-rm input/3.tm
 	java -classpath ./jars/cup.jar: CM input/3.cm
-	cat tempFile.txt
+	cat input/3.tm
 test4:
-	-rm tempFile.txt
+	-rm input/4.tm
 	java -classpath ./jars/cup.jar: CM input/4.cm
-	cat tempFile.txt
+	cat input/4.tm
 test5:
-	-rm tempFile.txt
+	-rm input/5.tm
 	java -classpath ./jars/cup.jar: CM input/5.cm
-	cat tempFile.txt
+	cat input/5.tm
 
 C1Test1:
 	java -classpath ./jars/cup.jar: CM input/C1-1.cm
