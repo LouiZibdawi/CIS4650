@@ -21,11 +21,9 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     public static int offset = 0;
     public static int entry = 0;
     public static int TraceCode = 1;
+    private static boolean inFunc = false;
+    private static boolean inParam = false;
     public static String filename = "tempFile.tm";
-
-    private void indent(int level) {
-        for( int i = 0; i < level * SPACES; i++ ) System.out.print(" ");
-    }
 
     public AssemblyCodeCreator(String inputFile) {
         this.symTable = new LinkedList<HashMap<String, SymItem>>();
@@ -35,10 +33,9 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitComment("File: " + this.filename);
     }
 
-
     public void visit(ExpList expList, int level) {
-        while( expList != null ) {
-            expList.head.accept( this, level );
+        while (expList != null) {
+            expList.head.accept(this, level);
             expList = expList.tail;
         }
     }
@@ -54,34 +51,49 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     public void visit(IfExp exp, int level) {
-        indent(level);
+//        indent(level);
 //        emitComment("Entering a new if block: ");
         this.symTable.addFirst(new HashMap<String, SymItem>());
         level++;
+        emitComment("-> if");
 
         exp.test.accept(this, level);
+        emitComment("if: jump to else belongs here");
+        int savedTestLoc = emitSkip(1);
         exp.thenpart.accept(this, level);
+        emitComment("if: jump to end belongs here");
+        int savedThenLoc = emitSkip(0);
+        int savedElseLoc = emitSkip(0);
+        emitBackup(savedTestLoc);
+        emitRM_Abs("JEQ", ac, savedThenLoc, "if: jmp to else");
+        emitRestore();
 
-        printMap(this.symTable.getFirst().entrySet().iterator(), level);
+//        printMap(this.symTable.getFirst().entrySet().iterator(), level);
         level--;
         this.symTable.removeFirst();
-        indent(level);
+//        indent(level);
 //        emitComment("Leaving the if block");
 
         if (exp.elsepart != null && !(exp.elsepart instanceof NilExp)) {
-            indent(level);
+//            indent(level);
 //            emitComment("Entering a new else block: ");
             this.symTable.addFirst(new HashMap<String, SymItem>());
             level++;
 
+            savedElseLoc = emitSkip(1);
             exp.elsepart.accept(this, level);
+            savedElseLoc = emitSkip(0) - 1;
 
-            printMap(this.symTable.getFirst().entrySet().iterator(), level);
+//            printMap(this.symTable.getFirst().entrySet().iterator(), level);
             level--;
             this.symTable.removeFirst();
-            indent(level);
+//            indent(level);
 //            emitComment("Leaving the else block");
         }
+        emitBackup(savedThenLoc);
+        emitRM_Abs("LDA", pc, savedElseLoc, "jmp to end");
+        emitRestore();
+        emitComment("<- if");
     }
 
     public void visit(IntExp exp, int level) {
@@ -101,6 +113,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     public void visit(CallExp exp, int level) {
         emitComment("-> call of function: " + exp.func);
         int argCount = -2; // -2 for arg 0 (first arg)
+
         ExpList args = exp.args;
         while (args != null) {
             args.head.accept(this, level);
@@ -108,6 +121,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
             emitRegisterMemory("ST", ac, offset+argCount, fp, "store arg val");
             argCount--;
         }
+
         emitRegisterMemory("ST", fp, offset, fp, "push ofp");
         emitRegisterMemory("LDA", fp, offset, fp, "push frame");
         emitRegisterMemory("LDA", ac, 1, pc, "load ac with ret ptr");
@@ -115,11 +129,12 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         else if (exp.func.equals("output")) emitRM_Abs("LDA", pc, 7, "jump to fun loc");
         else emitRM_Abs("LDA", pc, entry, "jump to fun loc");
         emitRegisterMemory("LD", fp, ac, fp, "pop frame");
-        if (this.symTable.getLast().containsKey(exp.func)) {
-            if (((SymItem) this.symTable.getLast().get(exp.func)).level == -1)
-                ((SymItem) this.symTable.getLast().get(exp.func)).level = -2; // mark as used prototype
-        }
         emitComment("<- call");
+
+//        if (this.symTable.getLast().containsKey(exp.func)) {
+//            if (((SymItem) this.symTable.getLast().get(exp.func)).level == -1)
+//                ((SymItem) this.symTable.getLast().get(exp.func)).level = -2; // mark as used prototype
+//        }
     }
 
     public void visit(WhileExp exp, int level) {
@@ -129,9 +144,11 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitComment("-> while");
         emitComment("while: jump after body comes back here");
         int savedTestLoc = emitSkip(0);
+
         exp.test.accept(this, level);
         emitComment("while: jump to end belongs here");
         int savedBodyLoc = emitSkip(1);
+
         exp.body.accept(this, level);
         emitRM_Abs("LDA", pc, savedTestLoc, "while: absolute jmp to test");
         int savedEndLoc = emitSkip(0);
@@ -149,6 +166,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         if (exp.exp != null) {
             exp.exp.accept(this, level);
         }
+        emitRegisterMemory("LD", pc, -1, fp, "return to caller");
         emitComment("<- return");
     }
 
@@ -167,7 +185,8 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitComment("<- compound statement");
     }
 
-    public void visit(FunctionDec exp, int level){
+    public void visit(FunctionDec exp, int level) {
+        inFunc = true;
         offset = -2;
         SymItem sym = new SymItem(exp.func, exp.result.typ, level, "");
         if (exp.body == null) { // Check if it is a prototype
@@ -177,10 +196,12 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
             VarDecList parms = exp.params;
             tempParams = ""; // clear before using
+            inParam = true;
             while (parms != null) {
                 parms.head.accept(this, level);
                 parms = parms.tail;
             }
+            inParam = false;
             sym.params += tempParams;
 
             level--;
@@ -197,7 +218,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
                 int savedFuncLoc = emitSkip(1);
                 emitRegisterMemory("ST", ac, -1, fp, "store return");
-                entry = emitLoc-1;
+                entry = emitLoc - 1;
 
                 currFunc = exp.func;
                 this.symTable.addFirst(new HashMap<String, SymItem>());
@@ -205,10 +226,12 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
                 VarDecList parms = exp.params;
                 tempParams = ""; // clear before using
+                inParam = true;
                 while (parms != null) {
                     parms.head.accept(this, level);
                     parms = parms.tail;
                 }
+                inParam = false;
                 sym.params = tempParams;
                 this.symTable.getLast().put(exp.func, sym);
 
@@ -226,18 +249,26 @@ public class AssemblyCodeCreator implements AbsynVisitor {
             } else
                 System.err.printf("Error: Already declared function: %s at line %d\n", exp.func, exp.pos+1);
         }
+        inFunc = false;
     }
 
-    public void visit(SimpleDec exp, int level){
-        SymItem sym = new SymItem(exp.name, exp.typ.typ, level, "", offset--);
+    public void visit(SimpleDec exp, int level) {
         if (!this.symTable.getFirst().containsKey(exp.name)) {
+            SymItem sym;
+            if (inFunc) {
+                sym = new SymItem(exp.name, exp.typ.typ, level, "", offset--);
+                if (!inParam) emitComment("processing local var: " + exp.name);
+            } else {
+                sym = new SymItem(exp.name, exp.typ.typ, level, "", globalOffset--);
+                emitComment("allocating global var: " + exp.name);
+                emitComment("<- vardecl");
+            }
             this.symTable.getFirst().put(exp.name, sym);
             tempParams += exp.typ.typ + " ";
-            emitComment("processing local var: " + exp.name);
         }
     }
 
-    public void visit(ArrayDec exp, int level) {
+    public void visit(ArrayDec exp, int level) { // TODO: global var declaration; see SimpleDec for example
         String name = "";
         name += exp.name + "[";
         if (exp.size != null)
@@ -291,12 +322,11 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitRegisterMemory("LD", fp, 0, fp, "pop frame");
         emitComment("End of execution.");
         emitRegisterOnly("HALT", 0, 0, 0, "");
-
     }
 
     public void visit(VarDecList expList, int level) {
-        while( expList != null ) {
-            expList.head.accept( this, level );
+        while (expList != null) {
+            expList.head.accept(this, level);
             expList = expList.tail;
         }
     }
@@ -327,6 +357,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitRegisterMemory("ST", ac, offset--, fp, "op: push left");
         exp.right.accept(this, level);
         emitRegisterMemory("LD", 1, ++offset, fp, "op: load left");
+
         switch (exp.op){
             case OpExp.PLUS:
                 emitRegisterOnly("ADD",ac,1,ac, "op +");
@@ -392,10 +423,10 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
 
-    public void printMap(Iterator i, int level) {
+/*    public void printMap(Iterator i, int level) {
         while (i.hasNext()) {
             SymItem symbol = (SymItem) ((Map.Entry) i.next()).getValue();
-            indent(level);
+//            indent(level);
             emitComment("processing local var: " + symbol.name);
             System.out.print(symbol.name + ": ");
             if (!symbol.params.isEmpty()) {
@@ -415,7 +446,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
             else if (symbol.type == 1)
                 System.out.println("void");
         }
-    }
+    }*/
 
     public boolean symExists(String name) {
         if (this.symTable.size() != 0) {
@@ -438,7 +469,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     // taken from the lecture slides
-    public void emitBackup (int location) {
+    public void emitBackup(int location) {
         if (location > highEmitLoc) emitComment("BUG in emitBackup");
         emitLoc = location;
     }
@@ -471,14 +502,14 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         String generatedString = "\t" + emitLoc + ":\t" + op + "\t" + r + "," + (a-(emitLoc+1)) + "(" + pc + ") \t";
         writeToFile(generatedString);
         emitLoc++;
-        if ( TraceCode == 1) writeToFile(c + "\n");
+        if (TraceCode == 1) writeToFile(c + "\n");
         else writeToFile("\n");
         if (highEmitLoc < emitLoc) highEmitLoc = emitLoc;
     }
 
     // taken from the lecture slides
-    //calculates skip distance based on input, highEmitLoc, and the highEmitLoc
-    public int emitSkip (int distance) {
+    // calculates skip distance based on input and highEmitLoc
+    public int emitSkip(int distance) {
         int i = emitLoc;
         emitLoc += distance;
         if (highEmitLoc < emitLoc) highEmitLoc = emitLoc;
@@ -496,5 +527,4 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         outFP.printf(toWrite);
         outFP.close();
     }
-
 }
