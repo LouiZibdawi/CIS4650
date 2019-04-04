@@ -13,16 +13,61 @@
    
 import java.io.*;
 import absyn.*;
-   
+import java.util.*;
+
 class CM {
-    public static final boolean SHOW_TREE = false;
-    public static final boolean SHOW_TABLE = true;
-    public static final boolean CREATE_ASSEMBLY = true;
+    public static boolean SHOW_TREE = false;
+    public static boolean SHOW_TABLE = false;
+    public static boolean CREATE_ASSEMBLY = false;
+
+    private static void printHelpMessage(){
+        System.out.println("Required arguments: a .cm file");
+        System.out.println("At least one flag must be supplied:");
+        System.out.println("\t -a: Shows the abstract syntax tree that is generated.");
+        System.out.println("\t -s: Shows the semantic analysis and symbol table that is generated.");
+        System.out.println("\t -c: Generates assembly output to be run on the tm simulator.");
+        System.out.println("\t -h: Display this help message.");
+    }
+
     public static void main(String argv[]) {
-    /* Start the parser */
+        /* Start the parser */
+        int foundFlag = 0;
+        int foundFile = 0;
         try {
-            parser p = new parser(new Lexer(new FileReader(argv[0])));
-            Absyn result = (Absyn)(p.parse().value);
+            String file = "";
+            for (String arg : argv) {
+                if (arg.equals("-a")) {
+                    SHOW_TREE = true;
+                    foundFlag = 1;
+                } else if (arg.equals("-s")) {
+                    SHOW_TREE = true;
+                    SHOW_TABLE = true;
+                    foundFlag = 1;
+                } else if (arg.equals("-c")) {
+                    SHOW_TREE = true;
+                    SHOW_TABLE = true;
+                    CREATE_ASSEMBLY = true;
+                    foundFlag = 1;
+                } else if (arg.equals("-h")) {
+                    printHelpMessage();
+                    System.exit(0);
+                } else if (arg.endsWith(".cm")) {
+                    file = arg;
+                    foundFile = 1;
+                } else {
+                    System.err.println("Error: Invalid argument encountered. See correct usage.");
+                    printHelpMessage();
+                    System.exit(0);
+                }
+            }
+
+            if (foundFile == 0 || foundFlag == 0) {
+                printHelpMessage();
+                System.exit(0);
+            }
+
+            parser p = new parser(new Lexer(new FileReader(file)));
+            Absyn result = (Absyn) (p.parse().value);
             if (SHOW_TREE) {
                 System.out.println("\nThe abstract syntax tree is:");
                 ShowTreeVisitor visitor = new ShowTreeVisitor();

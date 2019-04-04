@@ -21,6 +21,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     public static int offset = 0;
     public static int entry = 0;
     public static int TraceCode = 1;
+    private static int argCount = 0;
     private static boolean inFunc = false;
     private static boolean inParam = false;
     public static String filename = "tempFile.tm";
@@ -42,7 +43,15 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
     public void visit(AssignExp exp, int level) {
         emitComment("-> op");
-        exp.lhs.accept(this, 0);
+        int isParam = 0;
+        if (exp.lhs instanceof SimpleVar) {
+            if (this.symTable.getFirst().containsKey(((SimpleVar) exp.lhs).name)) isParam = 0;
+            else if (this.symTable.getLast().containsKey(((SimpleVar) exp.lhs).name)) isParam = -2;
+        } else if (exp.lhs instanceof IndexVar) {
+            if (this.symTable.getFirst().containsKey(((IndexVar) exp.lhs).name)) isParam = 0;
+            else if (this.symTable.getLast().containsKey(((IndexVar) exp.lhs).name)) isParam = -2;
+        }
+        exp.lhs.accept(this, isParam);
         emitRegisterMemory(" ST", ac, offset--, fp, "op: push left");
         exp.rhs.accept(this, level);
         emitRegisterMemory(" LD", 1, ++offset, fp, "op: load left");
@@ -62,10 +71,10 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         int savedTestLoc = emitSkip(1);
         exp.thenpart.accept(this, level);
         emitComment("if: jump to end belongs here");
-        int savedThenLoc = emitSkip(0);
+        int savedThenLoc = emitSkip(1);
         int savedElseLoc = emitSkip(0);
         emitBackup(savedTestLoc);
-        emitRM_Abs("JEQ", ac, savedThenLoc, "if: jmp to else");
+        emitRM_Abs("JEQ", ac, savedElseLoc, "if: jmp to else");
         emitRestore();
 
 //        printMap(this.symTable.getFirst().entrySet().iterator(), level);
@@ -80,9 +89,9 @@ public class AssemblyCodeCreator implements AbsynVisitor {
             this.symTable.addFirst(new HashMap<String, SymItem>());
             level++;
 
-            savedElseLoc = emitSkip(1);
+            //savedElseLoc = emitSkip(1);
             exp.elsepart.accept(this, level);
-            savedElseLoc = emitSkip(0) - 1;
+            savedElseLoc = emitSkip(0);
 
 //            printMap(this.symTable.getFirst().entrySet().iterator(), level);
             level--;
@@ -112,7 +121,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
     public void visit(CallExp exp, int level) {
         emitComment("-> call of function: " + exp.func);
-        int argCount = -2; // -2 for arg 0 (first arg)
+        argCount = -2; // -2 for arg 0 (first arg)
 
         ExpList args = exp.args;
         while (args != null) {
@@ -121,6 +130,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
             emitRegisterMemory("ST", ac, offset+argCount, fp, "store arg val");
             argCount--;
         }
+        argCount = 0;
 
         emitRegisterMemory(" ST", fp, offset, fp, "push ofp");
         emitRegisterMemory("LDA", fp, offset, fp, "push frame");
@@ -348,6 +358,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitComment("-> id");
         emitComment("looking up id: " + exp.name);
         if (isParam == 0) emitRegisterMemory("LDA", ac, tempOffset, fp, "load id address");
+        else if (isParam == -2) emitRegisterMemory("LDA", ac, tempOffset, gp, "load id address");
         else emitRegisterMemory(" LD", ac, tempOffset, fp, "load id value");
         emitComment("<- id");
     }
@@ -359,9 +370,11 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     public void visit(OpExp exp, int level) {
         emitComment("-> op");
         exp.left.accept(this, level);
-        emitRegisterMemory(" ST", ac, offset--, fp, "op: push left");
+        emitRegisterMemory(" ST", ac, offset+argCount, fp, "op: push left");
+        offset--;
         exp.right.accept(this, level);
-        emitRegisterMemory(" LD", 1, ++offset, fp, "op: load left");
+        offset++;
+        emitRegisterMemory(" LD", 1, offset+argCount, fp, "op: load left");
         switch (exp.op){
             case OpExp.PLUS:
                 emitRegisterOnly("ADD",ac,1,ac, "op +");
