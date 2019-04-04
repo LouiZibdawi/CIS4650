@@ -15,8 +15,6 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     private static final int gp = 6;
     private static final int fp = 5;
     private static final int ac = 0;
-    private static final int retFO = -1; // unused and don't know what for
-    private static final int initFO = -2; // unused and don't know what for
     public static int globalOffset = 0;
     public static int offset = 0;
     public static int entry = 0;
@@ -60,8 +58,6 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     public void visit(IfExp exp, int level) {
-//        indent(level);
-//        emitComment("Entering a new if block: ");
         this.symTable.addFirst(new HashMap<String, SymItem>());
         level++;
         emitComment("-> if");
@@ -77,27 +73,18 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitRM_Abs("JEQ", ac, savedElseLoc, "if: jmp to else");
         emitRestore();
 
-//        printMap(this.symTable.getFirst().entrySet().iterator(), level);
         level--;
         this.symTable.removeFirst();
-//        indent(level);
-//        emitComment("Leaving the if block");
 
         if (exp.elsepart != null && !(exp.elsepart instanceof NilExp)) {
-//            indent(level);
-//            emitComment("Entering a new else block: ");
             this.symTable.addFirst(new HashMap<String, SymItem>());
             level++;
 
-            //savedElseLoc = emitSkip(1);
             exp.elsepart.accept(this, level);
             savedElseLoc = emitSkip(0);
 
-//            printMap(this.symTable.getFirst().entrySet().iterator(), level);
             level--;
             this.symTable.removeFirst();
-//            indent(level);
-//            emitComment("Leaving the else block");
         }
         emitBackup(savedThenLoc);
         emitRM_Abs("LDA", pc, savedElseLoc, "jmp to end");
@@ -152,10 +139,6 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         else emitRM_Abs("LDA", pc, this.symTable.getLast().get(exp.func).level, "jump to fun loc");
         emitRegisterMemory(" LD", fp, ac, fp, "pop frame");
 
-//        if (this.symTable.getLast().containsKey(exp.func)) {
-//            if (((SymItem) this.symTable.getLast().get(exp.func)).level == -1)
-//                ((SymItem) this.symTable.getLast().get(exp.func)).level = -2; // mark as used prototype
-//        }
         emitComment("<- call");
     }
 
@@ -212,7 +195,6 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         offset = -2;
         SymItem sym = new SymItem(exp.func, exp.result.typ, level, "");
         if (exp.body == null) { // Check if it is a prototype
-            //sym.level = -1; // Set the level to -1 to identify it as a function prototype
             this.symTable.addFirst(new HashMap<String, SymItem>()); // temp storage for params
             level++;
 
@@ -291,7 +273,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         }
     }
 
-    public void visit(ArrayDec exp, int level) { // TODO: global var declaration; see SimpleDec for example
+    public void visit(ArrayDec exp, int level) {
         String name = "";
         name += exp.name + "[";
         if (exp.size != null)
@@ -346,7 +328,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
             expList = expList.tail;
         }
 
-        emitRegisterMemory(" ST", fp, globalOffset, fp, "push ofp"); // ???: what's globalOffset+ofpFO
+        emitRegisterMemory(" ST", fp, globalOffset, fp, "push ofp");
         emitRegisterMemory("LDA", fp, globalOffset, fp, "push frame");
         emitRegisterMemory("LDA", ac, 1, pc, "load ac with ret ptr");
         emitRM_Abs("LDA", pc, entry, "jump to main loc");
@@ -362,9 +344,19 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         }
     }
 
-    public void visit(IndexVar exp, int isParam) { // TODO: check if param or not and proceed accordingly
+    public void visit(IndexVar exp, int isParam) {
         emitComment("-> subs");
+        if (this.symTable.getFirst().containsKey(exp.name)) emitRegisterMemory(" LD", ac, -2, fp, "load id value");
+        else if (this.symTable.getLast().containsKey(exp.name)) emitRegisterMemory("LDA", ac, ac, gp, "load id address");
+        else emitRegisterMemory(" LD", ac, -2, fp, "load id value");
+        emitRegisterMemory(" ST", ac, offset--, fp, "store array addr");
         exp.index.accept(this, isParam);
+        emitRegisterMemory("JLT", ac, 1, pc, "halt if subscript < 0");
+        emitRegisterMemory("LDA", pc, 1, pc, "absolute jump if not");
+        emitRegisterMemory("HALT", 0, 0, 0, "halt if subscript < 0");
+        emitRegisterMemory(" LD", 1, ++offset, fp, "load array base addr");
+        emitRegisterOnly("SUB", ac, 1, ac, "base is at top of array");
+        if (isParam < -3) emitRegisterMemory(" LD", 0, 0, 0, "load value at array index"); // only when value is being accessed
         emitComment("<- subs");
     }
 
@@ -405,9 +397,6 @@ public class AssemblyCodeCreator implements AbsynVisitor {
             case OpExp.OVER:
                 emitRegisterOnly("DIV",ac,1,ac, "op /");
                 break;
-//            case OpExp.EQ:
-//                emitRegisterOnly("EQU", ac, 1, ac, "op =" );
-//                break;
             case OpExp.LT:
                 emitRegisterOnly("SUB", ac, 1, ac, "op <");
                 emitRegisterMemory("JLT", ac, 2, pc, "br if true");
