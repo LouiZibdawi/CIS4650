@@ -7,14 +7,16 @@ public class SemanticAnalyzer implements AbsynVisitor {
     public static LinkedList<HashMap<String, SymItem>> symTable;
     private static String tempParams = "";
     private static String currFunc = "";
+    public static String filename = "tempFile.tm";
 
-    public SemanticAnalyzer() {
+    public SemanticAnalyzer(String inputFile) {
         this.symTable = new LinkedList<HashMap<String, SymItem>>();
         this.symTable.add(new HashMap<String, SymItem>());
+        this.filename = inputFile.substring(0, inputFile.indexOf(".")) + ".sym";
     }
 
     private void indent(int level) {
-        for( int i = 0; i < level * SPACES; i++ ) System.out.print(" ");
+        for( int i = 0; i < level * SPACES; i++ ) writeToFile(" ");
     }
 
     public void visit(ExpList expList, int level) {
@@ -66,7 +68,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
     public void visit(IfExp exp, int level) {
         indent(level);
-        System.out.println("Entering a new if block: ");
+        writeToFile("Entering a new if block:\n");
         this.symTable.addFirst(new HashMap<String, SymItem>());
         level++;
 
@@ -77,11 +79,11 @@ public class SemanticAnalyzer implements AbsynVisitor {
         level--;
         this.symTable.removeFirst();
         indent(level);
-        System.out.println("Leaving the if block");
+        writeToFile("Leaving the if block\n");
 
         if (exp.elsepart != null && !(exp.elsepart instanceof NilExp)) {
             indent(level);
-            System.out.println("Entering a new else block: ");
+            writeToFile("Entering a new else block:\n");
             this.symTable.addFirst(new HashMap<String, SymItem>());
             level++;
 
@@ -91,7 +93,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
             level--;
             this.symTable.removeFirst();
             indent(level);
-            System.out.println("Leaving the else block");
+            writeToFile("Leaving the else block\n");
         }
 
         String var = "";
@@ -140,7 +142,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
 
     public void visit(WhileExp exp, int level) {
         indent(level);
-        System.out.println("Entering a new while block: ");
+        writeToFile("Entering a new while block: \n");
         this.symTable.addFirst(new HashMap<String, SymItem>());
         level++;
 
@@ -151,8 +153,8 @@ public class SemanticAnalyzer implements AbsynVisitor {
         level--;
         this.symTable.removeFirst();
         indent(level);
-        System.out.println("Leaving the while block");
-        
+        writeToFile("Leaving the while block\n");
+
         String var = "";
         if (exp.test instanceof VarExp) {
             if (((VarExp) exp.test).name instanceof SimpleVar) var = ((SimpleVar) ((VarExp) exp.test).name).name;
@@ -239,7 +241,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
             if (!this.symTable.getLast().containsKey(exp.func) ||
                     (this.symTable.getLast().containsKey(exp.func) && ((SymItem) this.symTable.getLast().get(exp.func)).level < 0)) {
                 indent(level);
-                System.out.println("Entering the scope for function " + exp.func + ": ");
+                writeToFile("Entering the scope for function " + exp.func + ": \n");
                 currFunc = exp.func;
                 this.symTable.addFirst(new HashMap<String, SymItem>());
                 level++;
@@ -258,7 +260,7 @@ public class SemanticAnalyzer implements AbsynVisitor {
                 level--;
                 this.symTable.removeFirst();
                 indent(level);
-                System.out.println("Leaving the function scope");
+                writeToFile("Leaving the function scope\n");
                 currFunc = "";
             } else
                 System.err.printf("Error: Already declared function: %s at line %d\n", exp.func, exp.pos+1);
@@ -377,22 +379,22 @@ public class SemanticAnalyzer implements AbsynVisitor {
         while (i.hasNext()) {
             SymItem symbol = (SymItem) ((Map.Entry) i.next()).getValue();
             indent(level);
-            System.out.print(symbol.name + ": ");
+            writeToFile(symbol.name + ": ");
             if (!symbol.params.isEmpty()) {
                 String[] tokens = symbol.params.split(" ");
-                System.out.print("( ");
+                writeToFile("");
                 for (String s : tokens) {
                     if (s.equals("0"))
-                        System.out.print("int ");
+                        writeToFile("int ");
                     else if (s.equals("1"))
-                        System.out.print("void ");
+                        writeToFile("void ");
                 }
-                System.out.print(") -> ");
+                writeToFile(") -> ");
             }
             if (symbol.type == 0)
-                System.out.println("int");
+                writeToFile("int\n");
             else if (symbol.type == 1)
-                System.out.println("void");
+                writeToFile("void\n");
         }
     }
 
@@ -424,5 +426,17 @@ public class SemanticAnalyzer implements AbsynVisitor {
             }
         }
         return -1;
+    }
+
+    //generic file writer to pipe output to a file
+    public void writeToFile(String toWrite) {
+        PrintWriter outFP = null;
+        try {
+            outFP = new PrintWriter(new FileOutputStream(this.filename, true));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        outFP.printf(toWrite);
+        outFP.close();
     }
 }

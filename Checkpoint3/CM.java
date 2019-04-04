@@ -19,6 +19,7 @@ class CM {
     public static boolean SHOW_TREE = false;
     public static boolean SHOW_TABLE = false;
     public static boolean CREATE_ASSEMBLY = false;
+    public static String filename = "tempFile.tm";
 
     private static void printHelpMessage(){
         System.out.println("Required arguments: a .cm file");
@@ -29,12 +30,23 @@ class CM {
         System.out.println("\t -h: Display this help message.");
     }
 
+    //generic file writer to pipe output to a file
+    public static void writeToFile(String toWrite, String file) {
+        PrintWriter outFP = null;
+        try {
+            outFP = new PrintWriter(new FileOutputStream(file, true));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        outFP.printf(toWrite);
+        outFP.close();
+    }
+
     public static void main(String argv[]) {
         /* Start the parser */
         int foundFlag = 0;
         int foundFile = 0;
         try {
-            String file = "";
             for (String arg : argv) {
                 if (arg.equals("-a")) {
                     SHOW_TREE = true;
@@ -52,7 +64,7 @@ class CM {
                     printHelpMessage();
                     System.exit(0);
                 } else if (arg.endsWith(".cm")) {
-                    file = arg;
+                    filename = arg;
                     foundFile = 1;
                 } else {
                     System.err.println("Error: Invalid argument encountered. See correct usage.");
@@ -66,23 +78,23 @@ class CM {
                 System.exit(0);
             }
 
-            parser p = new parser(new Lexer(new FileReader(file)));
+            parser p = new parser(new Lexer(new FileReader(filename)));
             Absyn result = (Absyn) (p.parse().value);
             if (SHOW_TREE) {
-                System.out.println("\nThe abstract syntax tree is:");
-                ShowTreeVisitor visitor = new ShowTreeVisitor();
+                writeToFile("The abstract syntax tree is: \n", filename.substring(0, filename.indexOf(".")) + ".abs");
+                ShowTreeVisitor visitor = new ShowTreeVisitor(filename);
                 result.accept(visitor, 0);
             }
             if (SHOW_TABLE) {
-                System.out.println("\nEntering the global scope: ");
-                SemanticAnalyzer sAnal = new SemanticAnalyzer();
+                writeToFile("Entering the global scope: \n", filename.substring(0, filename.indexOf(".")) + ".sym");
+                SemanticAnalyzer sAnal = new SemanticAnalyzer(filename);
                 result.accept(sAnal, 1);
                 sAnal.printMap(sAnal.symTable.getLast().entrySet().iterator(), 1);
-                System.out.println("Leaving the global scope");
+                writeToFile("Leaving the global scope", filename.substring(0, filename.indexOf(".")) + ".sym");
                 sAnal.printUndefined(sAnal.symTable.getLast().entrySet().iterator());
             }
             if (CREATE_ASSEMBLY) {
-                AssemblyCodeCreator codeGenerator = new AssemblyCodeCreator(argv[0]);
+                AssemblyCodeCreator codeGenerator = new AssemblyCodeCreator(filename);
                 result.accept(codeGenerator, 1);
             }
         } catch (Exception e) {

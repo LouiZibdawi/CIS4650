@@ -112,7 +112,15 @@ public class AssemblyCodeCreator implements AbsynVisitor {
     }
 
     public void visit(VarExp exp, int level) {
-        exp.name.accept(this, 1);
+        int isParam = -4;
+        if (exp.name instanceof SimpleVar) {
+            if (this.symTable.getFirst().containsKey(((SimpleVar) exp.name).name)) isParam = -4;
+            else if (this.symTable.getLast().containsKey(((SimpleVar) exp.name).name)) isParam = -6;
+        } else if (exp.name instanceof IndexVar) {
+            if (this.symTable.getFirst().containsKey(((IndexVar) exp.name).name)) isParam = -4;
+            else if (this.symTable.getLast().containsKey(((IndexVar) exp.name).name)) isParam = -6;
+        }
+        exp.name.accept(this, isParam);
     }
 
     public void visit(NilExp exp, int level) {
@@ -121,35 +129,34 @@ public class AssemblyCodeCreator implements AbsynVisitor {
 
     public void visit(CallExp exp, int level) {
         emitComment("-> call of function: " + exp.func);
-        argCount = -2; // -2 for arg 0 (first arg)
+        argCount -= 2; // -2 for arg 0 (first arg) for when going to each function call
+        int count = 0; // for non-function call arguments
 
         ExpList args = exp.args;
         while (args != null) {
             args.head.accept(this, level);
             args = args.tail;
-            emitRegisterMemory("ST", ac, offset+argCount, fp, "store arg val");
+            emitRegisterMemory(" ST", ac, offset+argCount, fp, "store arg val");
+            // original offset + how deep inside function calls (argCount) - the number of non-function arguments
             argCount--;
+            count++;
         }
-        argCount = 0;
+        argCount += count;
+        argCount += 2; // for when exiting the function call argument
 
-        emitRegisterMemory(" ST", fp, offset, fp, "push ofp");
-        emitRegisterMemory("LDA", fp, offset, fp, "push frame");
+        emitRegisterMemory(" ST", fp, offset+argCount, fp, "push ofp");
+        emitRegisterMemory("LDA", fp, offset+argCount, fp, "push frame");
         emitRegisterMemory("LDA", ac, 1, pc, "load ac with ret ptr");
-        if (exp.func.equals("input")) emitRM_Abs("LDA", pc, 4, "jump to fun loc"); // doesn't work
+        if (exp.func.equals("input")) emitRM_Abs("LDA", pc, 4, "jump to fun loc");
         else if (exp.func.equals("output")) emitRM_Abs("LDA", pc, 7, "jump to fun loc");
-        else emitRM_Abs("LDA", pc, entry, "jump to fun loc");
+        else emitRM_Abs("LDA", pc, this.symTable.getLast().get(exp.func).level, "jump to fun loc");
         emitRegisterMemory(" LD", fp, ac, fp, "pop frame");
-
-        if (this.symTable.getLast().containsKey(exp.func)) {
-            if (((SymItem) this.symTable.getLast().get(exp.func)).level == -1)
-                ((SymItem) this.symTable.getLast().get(exp.func)).level = -2; // mark as used prototype
-        }
-        emitComment("<- call");
 
 //        if (this.symTable.getLast().containsKey(exp.func)) {
 //            if (((SymItem) this.symTable.getLast().get(exp.func)).level == -1)
 //                ((SymItem) this.symTable.getLast().get(exp.func)).level = -2; // mark as used prototype
 //        }
+        emitComment("<- call");
     }
 
     public void visit(WhileExp exp, int level) {
@@ -205,7 +212,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         offset = -2;
         SymItem sym = new SymItem(exp.func, exp.result.typ, level, "");
         if (exp.body == null) { // Check if it is a prototype
-            sym.level = -1; // Set the level to -1 to identify it as a function prototype
+            //sym.level = -1; // Set the level to -1 to identify it as a function prototype
             this.symTable.addFirst(new HashMap<String, SymItem>()); // temp storage for params
             level++;
 
@@ -232,8 +239,9 @@ public class AssemblyCodeCreator implements AbsynVisitor {
                 emitComment("jump around function body here");
 
                 int savedFuncLoc = emitSkip(1);
-                emitRegisterMemory("ST", ac, -1, fp, "store return");
+                emitRegisterMemory(" ST", ac, -1, fp, "store return");
                 entry = emitLoc - 1;
+                sym.level = entry;
 
                 currFunc = exp.func;
                 this.symTable.addFirst(new HashMap<String, SymItem>());
@@ -289,11 +297,19 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         if (exp.size != null)
             name += exp.size.value + "";
         name += "]";
-        SymItem sym = new SymItem(name, exp.typ.typ, level, "", offset--);
+
         if (!this.symTable.getFirst().containsKey(exp.name)) {
+            SymItem sym;
+            if (inFunc) {
+                sym = new SymItem(name, exp.typ.typ, level, "", offset--);
+                if (!inParam) emitComment("processing local var: " + exp.name);
+            } else {
+                sym = new SymItem(name, exp.typ.typ, level, "", globalOffset--);
+                emitComment("allocating global var: " + exp.name);
+                emitComment("<- vardecl");
+            }
             this.symTable.getFirst().put(exp.name, sym);
             tempParams += exp.typ.typ + " ";
-            emitComment("processing local var: " + exp.name);
         }
     }
 
@@ -330,7 +346,7 @@ public class AssemblyCodeCreator implements AbsynVisitor {
             expList = expList.tail;
         }
 
-        emitRegisterMemory("ST", fp, globalOffset, fp, "push ofp"); // ???: what's globalOffset+ofpFO
+        emitRegisterMemory(" ST", fp, globalOffset, fp, "push ofp"); // ???: what's globalOffset+ofpFO
         emitRegisterMemory("LDA", fp, globalOffset, fp, "push frame");
         emitRegisterMemory("LDA", ac, 1, pc, "load ac with ret ptr");
         emitRM_Abs("LDA", pc, entry, "jump to main loc");
@@ -359,7 +375,8 @@ public class AssemblyCodeCreator implements AbsynVisitor {
         emitComment("looking up id: " + exp.name);
         if (isParam == 0) emitRegisterMemory("LDA", ac, tempOffset, fp, "load id address");
         else if (isParam == -2) emitRegisterMemory("LDA", ac, tempOffset, gp, "load id address");
-        else emitRegisterMemory(" LD", ac, tempOffset, fp, "load id value");
+        else if (isParam == -4) emitRegisterMemory(" LD", ac, tempOffset, fp, "load id value");
+        else if (isParam == -6) emitRegisterMemory(" LD", ac, tempOffset, gp, "load id value");
         emitComment("<- id");
     }
 
